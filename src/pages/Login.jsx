@@ -122,7 +122,7 @@ export default function Login() {
 
           <div className="mt-6 text-center text-gray-500 text-sm">
             ¿No tienes cuenta?{' '}
-            <a href="/registro" className="text-[#f1c98a] font-bold hover:underline ml-1">
+            <a href="/CrearCuenta" className="text-[#f1c98a] font-bold hover:underline ml-1">
               Crear cuenta ahora
             </a>
           </div>
