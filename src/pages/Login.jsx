@@ -37,6 +37,10 @@ export default function Login() {
       </div>
 
       <div className="flex flex-col justify-center items-center px-8 lg:px-20 bg-[#0a0a0a] z-30 h-full">
+
+
+
+        <a href="/" class="absolute top-4 right-4 text-white text-sm z-10">JARide</a>
         
 
         <div className="w-full max-w-md">
