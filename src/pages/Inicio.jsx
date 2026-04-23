@@ -5,6 +5,7 @@ import Searchbar from '../components/Searchbar'
 import FeaturedGrid from '../components/FeaturedGrid'
 import Stats from '../components/Stats'
 import Footer from '../components/Footer'
+import Testimonials from '../components/Testimonials'
 
 function Inicio() {
   return (
@@ -13,6 +14,7 @@ function Inicio() {
         <Hero />
         <FeaturedGrid />
         <Stats />
+        <Testimonials />
         <Footer />
 
     </div>

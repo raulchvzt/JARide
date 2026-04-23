@@ -9,8 +9,8 @@ export default function Navbar() {
           Comprar
           <span className="absolute -bottom-1 left-0 w-0 h-px bg-[#e7b476] group-hover:w-full transition-all"></span>
         </a>
-        <a href="#" className="hover:text-white transition">Vender</a>
-        <a href="#" className="hover:text-white transition">Verificados</a>
+        <a href="/vender" className="hover:text-white transition">Vender</a>
+        <a href="/verificados" className="hover:text-white transition">Verificados</a>
         <a href="#" className="hover:text-white transition">Financiamiento</a>
       </div>
       <div className="flex gap-4">

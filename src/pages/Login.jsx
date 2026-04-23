@@ -22,7 +22,7 @@ export default function Login() {
           Tu navegador no soporta videos.
         </video>
 
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent z-10"></div>
+        <div className="absolute inset-0 bg-linear-to-t from-black via-black/40 to-transparent z-10"></div>
         
         {/* Esta es la parte del lado izquierdo de la interfaz, donde esta el video y el lorem */}
 
