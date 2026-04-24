@@ -12,6 +12,7 @@ function App() {
     <Route path='/comprar' element={<VentanaComprar />} />
     <Route path='/' element={<Inicio />} />
     <Route path='/crearcuenta' element={<CrearCuenta />} />
+    <Route path='/comprar' element={<VentanaComprar />} />
     </Routes>
   )
 }
