@@ -3,6 +3,7 @@ import Login from './pages/Login'
 import Inicio from './pages/Inicio'
 import CrearCuenta from './pages/CrearCuenta'
 import Vender from './pages/Vender'
+import Verificados from './pages/Verificados'
 
 function App() {
 
@@ -12,6 +13,7 @@ function App() {
     <Route path='/login' element={<Login />} />
     <Route path='/crearcuenta' element={<CrearCuenta />} />
     <Route path='/vender' element={<Vender />} />
+    <Route path='/verificados' element={<Verificados />} />
     </Routes>
   )
 }

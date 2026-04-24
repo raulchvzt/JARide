@@ -2,7 +2,7 @@ import React from 'react';
 
 export default function Navbar() {
   return (
-    <nav className="fixed top-0 w-full z-50 flex justify-between items-center px-10 py-6 bg-transparent backdrop-blur-sm">
+    <nav className="fixed top-0 w-full z-50 flex justify-between items-center px-10   py-6 bg-transparent backdrop-blur-sm">
       <div className="text-white font-black italic text-2xl tracking-tighter">JARide</div>
       <div className="hidden md:flex gap-8 text-white/70 text-[10px] uppercase tracking-[0.2em] font-bold">
         <a href="#" className="hover:text-white transition group relative">
