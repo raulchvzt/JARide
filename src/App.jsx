@@ -3,6 +3,8 @@ import Login from './pages/Login'
 import Inicio from './pages/Inicio'
 import VentanaComprar from './pages/VentanaComprar'
 import CrearCuenta from './pages/CrearCuenta'
+import DetallesCompra from './pages/DetallesCompra'
+
 
 function App() {
 
@@ -13,6 +15,8 @@ function App() {
     <Route path='/' element={<Inicio />} />
     <Route path='/crearcuenta' element={<CrearCuenta />} />
     <Route path='/comprar' element={<VentanaComprar />} />
+    <Route path="/auto/:id" element={<DetallesCompra />} />
+
     </Routes>
   )
 }
