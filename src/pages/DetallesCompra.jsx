@@ -31,9 +31,9 @@ const auto = {
     ],
     imgPrincipal: "https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=900&q=80",
     galeria: [
-         "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
-    "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=400&q=80",
-    "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=400&q=80",
+        "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+        "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=400&q=80",
+        "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=400&q=80",
     ],
 };
 
@@ -42,12 +42,12 @@ export default function DetallesCompra() {
     const [imgActiva, setImgActiva] = useState(auto.imgPrincipal);
 
     const formatPrecio = (p) => 'MX$ ' + p.toLocaleString('en-MX');
-  return (
-<div style={{ background: '#0a0a0a', minHeight: '100vh', color: '#fff', fontFamily: 'sans-serif', paddingTop: '56px' }}>
+    return (
+        <div style={{ background: '#0a0a0a', minHeight: '100vh', color: '#fff', fontFamily: 'sans-serif', paddingTop: '56px' }}>
             <Navbar />
 
             {/* BREADCRUMB */}
-<div style={{ padding: '16px 40px', fontSize: '11px', color: '#6b7280', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: '56px' }}>
+            <div style={{ padding: '16px 40px', fontSize: '11px', color: '#6b7280', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: '56px' }}>
                 <span style={{ cursor: 'pointer' }}>Inicio</span>
                 <span style={{ margin: '0 8px' }}>›</span>
                 <span style={{ cursor: 'pointer' }}>Audi</span>
@@ -197,6 +197,6 @@ export default function DetallesCompra() {
                 </div>
             </div>
         </div>
-    
-  );
+
+    );
 }
