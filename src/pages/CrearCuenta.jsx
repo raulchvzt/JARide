@@ -44,7 +44,7 @@ export default function CrearCuenta() {
                 <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover z-0">
                     <source src={videoUrl} type="video/mp4" />
                 </video>
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent z-10"></div>
+                <div className="absolute inset-0 bg-linear-to-t from-black via-black/40 to-transparent z-10"></div>
                 <div className="relative z-20 max-w-lg mb-8">
                     <h1 className="text-6xl font-black tracking-tighter mb-4 italic">JARide</h1>
                     <p className="text-xl text-gray-200 leading-relaxed font-light">
