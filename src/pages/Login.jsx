@@ -40,9 +40,7 @@ export default function Login() {
 
 
 
-        <a href="/" class="absolute top-4 right-4 text-white text-sm z-10">JARide</a>
-        
-
+      
         <div className="w-full max-w-md">
           <h1 className="md:hidden text-4xl font-black text-[#f1c98a] mb-6 italic text-center">JARide</h1>
           

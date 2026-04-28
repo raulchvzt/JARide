@@ -1,41 +1,52 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 
 // Modificamos el componente Card para que soporte video
-const Card = ({ title, sub, img, video, span = "", desc = "" }) => (
-  <div className={`relative overflow-hidden bg-[#111] group rounded-xl ${span}`}>
-    
-    {/* Lógica: Si hay video, renderiza <video>, si no, renderiza <img> */}
-    {video ? (
-      <video
-        src={video}
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="w-full h-full object-cover opacity-50 group-hover:scale-105 transition duration-1000"
-      />
-    ) : (
-      <img 
-        src={img} 
-        className="w-full h-full object-cover opacity-50 group-hover:scale-105 transition duration-1000" 
-        alt={title} 
-      />
-    )}
+const Card = ({ title, sub, img, video, span = "", desc = "" }) => {
+  const videoRef = useRef(null);
 
-    <div className="absolute inset-0 p-10 flex flex-col justify-end bg-linear-to-t from-black via-black/20 to-transparent">
-      <p className="text-[#e7b476] text-[10px] uppercase tracking-[0.4em] mb-3 font-bold">{sub}</p>
-      <h3 className="text-3xl text-white font-light tracking-tight">{title}</h3>
-      {desc && <p className="text-white/40 text-xs mt-3 font-light max-w-xs">{desc}</p>}
-      <a href="#" className="text-white/40 text-[10px] uppercase tracking-widest mt-6 group-hover:text-white transition">Ver detalles</a>
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = 5; // Empieza 5 segundos después
+    }
+  }, []);
+
+  return (
+    <div className={`relative overflow-hidden bg-[#111] group rounded-xl ${span}`}>
+      
+      {/* Lógica: Si hay video, renderiza <video>, si no, renderiza <img> */}
+      {video ? (
+        <video
+          ref={videoRef}
+          src={video}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-cover opacity-50 group-hover:scale-105 transition duration-1000"
+        />
+      ) : (
+        <img 
+          src={img} 
+          className="w-full h-full object-cover opacity-50 group-hover:scale-105 transition duration-1000" 
+          alt={title} 
+        />
+      )}
+
+      <div className="absolute inset-0 p-10 flex flex-col justify-end bg-linear-to-t from-black via-black/20 to-transparent">
+        <p className="text-[#e7b476] text-[10px] uppercase tracking-[0.4em] mb-3 font-bold">{sub}</p>
+        <h3 className="text-3xl text-white font-light tracking-tight">{title}</h3>
+        {desc && <p className="text-white/40 text-xs mt-3 font-light max-w-xs">{desc}</p>}
+        <a href="#" className="text-white/40 text-[10px] uppercase tracking-widest mt-6 group-hover:text-white transition">Ver detalles</a>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default function FeaturedGrid() {
   return (
     <section className="bg-black py-24 px-10 md:px-20">
       <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
-        <h2 className="text-4xl md:text-6xl text-white font-extralight leading-tight max-w-2xl">
+        <h2 className="text-4xl md:text-6xl text-white font-extralight leading-tight max-w-2xl font-sans">
           Inspirado en una estética editorial, <span className="font-normal">pero pensado para vender.</span>
         </h2>
         <p className="text-white/30 uppercase text-[10px] tracking-[0.5em] border-b border-white/10 pb-2">Autos listos para explorar</p>
