@@ -1,16 +1,58 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 export default function Login() {
+  // Ajusta la ruta de tu video si es necesario
+  const videoUrl = "/src/assets/BMW M4 GT4 – Born to Race 🏁 _ Ultimate Cinematic Edit in 4K.mp4";
 
-    const videoUrl = "/src/assets/BMW M4 GT4 – Born to Race 🏁 _ Ultimate Cinematic Edit in 4K.mp4";
+  // 1. ESTADOS PARA CAPTURAR LOS INPUTS
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+
+  // 2. FUNCIÓN PARA MANEJAR EL INICIO DE SESIÓN
+  const manejarLogin = async (e) => {
+    e.preventDefault(); // Evita que la página se recargue
+
+    try {
+      // Usamos la IP 127.0.0.1 para evitar problemas con 'localhost'
+      const response = await fetch('http://127.0.0.1:5000/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Guardamos los datos en el navegador
+        localStorage.setItem('usuarioNombre', data.nombre);
+        localStorage.setItem('usuarioFoto', data.foto); // 
+        localStorage.setItem('usuarioRol', data.rol); // 
+        localStorage.setItem('estaAutenticado', 'true');
+        
+        // Mostramos toast bonito y redirigimos
+        setToastMessage('¡Sesión iniciada con éxito! 🎉');
+        setShowToast(true);
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 2000); // Redirige después de 2 segundos
+      } else {
+        setToastMessage('Error: ' + data.message);
+        setShowToast(true);
+      }
+    } catch (error) {
+      console.error("Error de conexión:", error);
+      setToastMessage("No se pudo conectar con el servidor. ¿Ya escribiste 'node server.js' en la terminal?");
+      setShowToast(true);
+    }
+  };
 
   return (
     <div className="h-screen w-full grid grid-cols-1 md:grid-cols-2 bg-black text-white font-sans overflow-hidden">
       
-      {/* --- AQUI INICIA LA PARTE IZQUIERDA --- */}
+      {/* --- PARTE IZQUIERDA: VIDEO --- */}
       <div className="relative overflow-hidden hidden md:flex flex-col justify-end p-12 h-full">
-        
-        {/* Este es el video de fondo */}
         <video
           autoPlay
           loop
@@ -24,8 +66,6 @@ export default function Login() {
 
         <div className="absolute inset-0 bg-linear-to-t from-black via-black/40 to-transparent z-10"></div>
         
-        {/* Esta es la parte del lado izquierdo de la interfaz, donde esta el video y el lorem */}
-
         <div className="relative z-20 max-w-lg mb-8">
           <h1 className="text-6xl font-black tracking-tighter mb-4 italic">
             JARide
@@ -36,23 +76,15 @@ export default function Login() {
         </div>
       </div>
 
+      {/* --- PARTE DERECHA: FORMULARIO --- */}
       <div className="flex flex-col justify-center items-center px-8 lg:px-20 bg-[#0a0a0a] z-30 h-full">
-
-
-
-      
         <div className="w-full max-w-md">
           <h1 className="md:hidden text-4xl font-black text-[#f1c98a] mb-6 italic text-center">JARide</h1>
           
-          <h2 className="text-3xl font-bold mb-1 tracking-tight">
-            Iniciar sesión
-          </h2>
-          <p className="text-gray-400 mb-6 text-base font-light">
-            Ingresa con tu cuenta para continuar.
-          </p>
+          <h2 className="text-3xl font-bold mb-1 tracking-tight">Iniciar sesión</h2>
+          <p className="text-gray-400 mb-6 text-base font-light">Ingresa con tu cuenta para continuar.</p>
 
-          {/* Aqui inicia la seccion de los botones de Redes Sociales */}
-
+          {/* Botones de Redes Sociales */}
           <div className="grid grid-cols-2 gap-4 mb-6">
             <button className="flex items-center justify-center gap-3 py-2 px-4 border border-gray-800 rounded-xl hover:bg-gray-900 transition-all duration-300 group text-sm">
               <img src="https://authjs.dev/img/providers/google.svg" alt="Google" className="h-4 group-hover:scale-110 transition-transform" />
@@ -74,12 +106,15 @@ export default function Login() {
             </span>
           </div>
 
-          {/* Formulario */}
-          <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+          {/* FORMULARIO DE ACCESO */}
+          <form className="space-y-4" onSubmit={manejarLogin}>
             <div className="space-y-1">
               <label className="text-xs font-medium text-gray-400 ml-1 uppercase tracking-wider">Correo electrónico</label>
               <input 
                 type="email" 
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="ejemplo@jaride.com"
                 className="w-full p-3 bg-[#141414] border border-gray-800 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-[#f1c98a] transition-all text-sm"
               />
@@ -92,26 +127,23 @@ export default function Login() {
               </div>
               <input 
                 type="password" 
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 className="w-full p-3 bg-[#141414] border border-gray-800 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-[#f1c98a] transition-all text-sm"
               />
             </div>
 
-            <div className="flex items-center gap-3 py-1">
-              <input 
-                type="checkbox" 
-                className="h-4 w-4 rounded border-gray-800 text-[#f1c98a] focus:ring-[#f1c98a] bg-[#141414] cursor-pointer"
-              />
-              <label className="text-xs text-gray-500 cursor-pointer select-none">Recordarme en este dispositivo</label>
-            </div>
-
-            <button className="w-full p-3 bg-[#f1c98a] text-black font-bold text-base rounded-xl hover:bg-[#e2bc7d] active:scale-[0.98] transition-all shadow-lg">
+            <button 
+              type="submit"
+              className="w-full p-3 bg-[#f1c98a] text-black font-bold text-base rounded-xl hover:bg-[#e2bc7d] active:scale-[0.98] transition-all shadow-lg"
+            >
               Entrar
             </button>
           </form>
 
-          {/* Aqui es la seccion del banner de seguridad */}
-          
+          {/* Banner de seguridad */}
           <div className="mt-6 p-3 bg-[#111] rounded-xl border border-gray-800 flex items-center gap-4">
             <div className="bg-[#f1c98a]/10 p-2 rounded-lg">
                <span className="text-[#f1c98a] text-lg">🛡️</span>
@@ -130,6 +162,30 @@ export default function Login() {
           </div>
         </div>
       </div>
+
+      {/* TOAST NOTIFICATION BONITO */}
+      {showToast && (
+        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2 duration-300">
+          <div className="bg-[#0a0a0a] border border-[#f1c98a]/20 rounded-xl p-4 shadow-2xl backdrop-blur-sm max-w-sm">
+            <div className="flex items-center gap-3">
+              <div className="bg-[#f1c98a]/10 p-2 rounded-full">
+                <span className="text-[#f1c98a] text-lg">
+                  {toastMessage.includes('éxito') ? '✅' : '❌'}
+                </span>
+              </div>
+              <div className="flex-1">
+                <p className="text-white text-sm font-medium">{toastMessage}</p>
+              </div>
+              <button 
+                onClick={() => setShowToast(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
