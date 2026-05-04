@@ -1,23 +1,51 @@
-import React from "react";
-// Importación de componentes locales
+import React, { useState, useEffect } from "react";
 import StatCard from "../../components/admin/StatCard";
 import DashboardChart from "../../components/admin/DashboardChart";
 import { ValidationRow, ReportItem, ActividadItem } from "../../components/admin/UIElements";
 
-// Importación de iconos (Asegúrate de que existan para evitar pantalla blanca)
 import { 
   LuCar, 
   LuTrendingUp, 
   LuUsers, 
-  LuCircleAlert ,
-  LuSearch, 
-  LuBell, 
-  LuPlus, 
+  LuCircleAlert,
   LuHistory 
 } from "react-icons/lu";
 
 export default function VistaGeneral() {
-  
+  const [pendientes, setPendientes] = useState([]);
+
+  // 1. Cargar autos reales del servidor
+  const cargarPendientes = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/autos');
+      const data = await res.json();
+      // Solo mostramos los que tienen estado "pendiente"
+      const soloPendientes = data.filter(auto => auto.estado === "pendiente");
+      setPendientes(soloPendientes);
+    } catch (error) {
+      console.error("Error al conectar con la API:", error);
+    }
+  };
+
+  useEffect(() => {
+    cargarPendientes();
+  }, []);
+
+  // 2. Función para Aprobar o Rechazar (Conectada a los botones del componente)
+  const manejarDecision = async (id, nuevoEstado) => {
+    try {
+      await fetch('http://localhost:5000/api/admin/revisar-auto', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, nuevoEstado })
+      });
+      cargarPendientes(); // Refresca la lista automáticamente
+    } catch (error) {
+      console.error("Error al procesar la revisión:", error);
+      alert("Error al procesar la revisión");
+    }
+  };
+
   const obtenerFechaActual = () => {
     const fecha = new Date();
     const opciones = { day: "numeric", month: "long", year: "numeric" };
@@ -26,7 +54,6 @@ export default function VistaGeneral() {
   };
 
   return (
-    /* Eliminamos el flex y el ml-64 porque el AdminDashboard ya los maneja */
     <div className="animate-in fade-in duration-700">
       
       {/* HEADER */}
@@ -38,11 +65,6 @@ export default function VistaGeneral() {
             <p className="text-white/40 text-[11px] tracking-[0.2em] uppercase font-black">
               Hoy, {obtenerFechaActual()}
             </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4 w-full md:w-auto">
-          <div className="relative flex-1 md:w-64 group">
           </div>
         </div>
       </header>
@@ -65,15 +87,32 @@ export default function VistaGeneral() {
         <div className="lg:col-span-2 bg-[#111] rounded-3xl border border-white/5 p-8 shadow-2xl">
           <div className="flex justify-between items-center mb-8">
             <h3 className="text-xl font-medium">Validación de Vehículos</h3>
-            <button className="text-white/40 text-[10px] uppercase tracking-widest hover:text-white transition font-black">Ver todos</button>
+            <span className="bg-[#e7b476]/10 text-[#e7b476] text-[9px] px-2 py-0.5 rounded font-black uppercase tracking-widest border border-[#e7b476]/20">
+              {pendientes.length} POR REVISAR
+            </span>
           </div>
+          
           <div className="space-y-6">
-            <ValidationRow img="/src/assets/audiq8.jpg" name="Audi Q8 S-Line 2023" info="Subido por Carlos M. • Colima • $1,200 MXN/día" />
-            <ValidationRow img="/src/assets/mercedes.png" name="Mercedes-Benz C-Class 2022" info="Subido por AutoPremium MX • Colima • $950 MXN/día" />
-            <ValidationRow img="/src/assets/pors.jpg" name="Porsche 911 Carrera 2021" info="Subido por ExoticRents • Colima • $4,500 MXN/día" />
+            {pendientes.length > 0 ? (
+              pendientes.map((auto) => (
+                <ValidationRow 
+                  key={auto.id}
+                  img={auto.photos[0] || "/placeholder-car.jpg"} 
+                  name={`${auto.marca} ${auto.modelo}`} 
+                  info={`Subido por ${auto.vendedor} • KM: ${auto.km} • $${auto.precio}`} 
+                  onAccept={() => manejarDecision(auto.id, 'aprobado')}
+                  onReject={() => manejarDecision(auto.id, 'rechazado')}
+                />
+              ))
+            ) : (
+              <div className="py-10 text-center border-2 border-dashed border-white/5 rounded-2xl">
+                 <p className="text-white/20 text-xs font-black uppercase tracking-widest">No hay solicitudes pendientes</p>
+              </div>
+            )}
           </div>
         </div>
 
+        {/* REPORTE Y ACTIVIDAD (Se mantienen igual) */}
         <div className="flex flex-col gap-6">
           <div className="bg-[#111] rounded-3xl border border-white/5 p-8 shadow-2xl">
             <div className="flex justify-between items-center mb-8">

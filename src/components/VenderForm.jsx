@@ -9,10 +9,10 @@ const InputGroup = ({ label, name, value, onChange, placeholder, options }) => (
         name={name}
         value={value}
         onChange={onChange}
-        className="bg-[#111] border border-white/10 rounded-lg p-3 text-white text-sm"
+        className="bg-[#111] border border-white/10 rounded-lg p-3 text-white text-sm outline-none focus:border-[#e7b476]/50 transition-colors"
       >
         <option value="">Selecciona</option>
-        {options.map(opt => <option key={opt}>{opt}</option>)}
+        {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
       </select>
     ) : (
       <input
@@ -20,7 +20,7 @@ const InputGroup = ({ label, name, value, onChange, placeholder, options }) => (
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className="bg-[#111] border border-white/10 rounded-lg p-3 text-white text-sm"
+        className="bg-[#111] border border-white/10 rounded-lg p-3 text-white text-sm outline-none focus:border-[#e7b476]/50 transition-colors"
       />
     )}
   </div>
@@ -41,10 +41,28 @@ export default function VenderForm({ formData, setFormData }) {
       <section>
         <h3 className="text-white font-medium mb-6">2. Información del vehículo</h3>
         <div className="grid md:grid-cols-2 gap-6">
-          <InputGroup label="Marca" name="marca" value={formData.marca} onChange={handleChange} />
-          <InputGroup label="Modelo" name="modelo" value={formData.modelo} onChange={handleChange} />
-          <InputGroup label="Año" name="anio" value={formData.anio} onChange={handleChange} options={["2024","2023","2022"]} />
-          <InputGroup label="Precio" name="precio" value={formData.precio} onChange={handleChange} />
+          <InputGroup label="Marca" name="marca" value={formData.marca} onChange={handleChange} placeholder="Ej. Audi" />
+          <InputGroup label="Modelo" name="modelo" value={formData.modelo} onChange={handleChange} placeholder="Ej. R8" />
+          
+          {/* NUEVO CAMPO DE CATEGORÍA PARA LOS FILTROS */}
+          <InputGroup label="Kilometraje (KM)" name="km" value={formData.km} onChange={handleChange} placeholder="Ej: 15000" />
+          <InputGroup 
+            label="Categoría (Tipo de auto)" 
+            name="categoria" 
+            value={formData.categoria} 
+            onChange={handleChange} 
+            options={["SUVs", "Sedanes", "PickUps","Deportivos", "Eléctricos"]} 
+          />
+
+          <InputGroup 
+            label="Año" 
+            name="anio" 
+            value={formData.anio} 
+            onChange={handleChange} 
+            options={["2025", "2024", "2023", "2022", "2021", "2020"]} 
+          />
+          
+          <InputGroup label="Precio (USD$)" name="precio" value={formData.precio} onChange={handleChange} placeholder="0.00" />
         </div>
       </section>
 
@@ -53,13 +71,14 @@ export default function VenderForm({ formData, setFormData }) {
         <div className="grid md:grid-cols-3 gap-6">
 
           <div>
-            <label className="text-white/40 text-[10px] font-bold">Condición</label>
+            <label className="text-white/40 text-[10px] font-bold uppercase">Condición</label>
             <div className="flex gap-2 mt-2">
               {["Seminuevo","Usado"].map(c => (
                 <button
                   key={c}
+                  type="button" // Evita que el form se envíe solo
                   onClick={() => setFormData({ ...formData, condicion: c })}
-                  className={`flex-1 py-3 rounded-lg text-xs font-bold ${
+                  className={`flex-1 py-3 rounded-lg text-xs font-bold transition-all ${
                     formData.condicion === c
                       ? 'bg-white/10 text-white border border-[#e7b476]/50'
                       : 'bg-[#111] text-white/40 border border-white/5'
@@ -97,8 +116,8 @@ export default function VenderForm({ formData, setFormData }) {
           value={formData.descripcion}
           onChange={handleChange}
           rows="4"
-          placeholder="Describe el estado de tu vehículo..."
-          className="bg-[#111] border border-white/10 rounded-lg p-4 text-white text-sm w-full"
+          placeholder="Describe el estado de tu vehículo, equipamiento extra o detalles importantes..."
+          className="bg-[#111] border border-white/10 rounded-lg p-4 text-white text-sm w-full outline-none focus:border-[#e7b476]/50 transition-colors"
         />
       </section>
 

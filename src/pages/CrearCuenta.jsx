@@ -81,11 +81,8 @@ export default function CrearCuenta() {
         if (debounceRef.current) clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(async () => {
             try {
-                const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(texto)}&format=json&countrycodes=mx&addressdetails=1&limit=6&dedupe=1`;
-                const res = await fetch(
-                    `https://corsproxy.io/?${encodeURIComponent(url)}`,
-                    { headers: { "Accept-Language": "es" } }
-                );
+                const url = `/api/nominatim/search?q=${encodeURIComponent(texto)}&format=json&countrycodes=mx&addressdetails=1&limit=6&dedupe=1`;
+                const res = await fetch(url);
                 const data = await res.json();
                 setSugerencias(data);
             } catch {

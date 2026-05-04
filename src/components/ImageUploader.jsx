@@ -6,9 +6,11 @@ export default function ImageUploader({ photos, setPhotos }) {
   const handleUpload = (e) => {
     const files = Array.from(e.target.files);
 
+    // Creamos el objeto con la URL para la vista previa Y el archivo real para el server
     const newPhotos = files.map(file => ({
       id: Date.now() + Math.random(),
-      url: URL.createObjectURL(file),
+      url: URL.createObjectURL(file), // Esto es solo para verla en pantalla
+      file: file,                     // <--- ESTE ES EL ARCHIVO REAL QUE SUBIREMOS
       label: ''
     }));
 
@@ -23,7 +25,6 @@ export default function ImageUploader({ photos, setPhotos }) {
     <div className="bg-[#0a0a0a] border border-white/5 rounded-2xl p-8 mb-10">
       <h3 className="text-white font-medium mb-6">1. Fotografías del vehículo</h3>
 
-      {/* INPUT OCULTO */}
       <input
         type="file"
         multiple
@@ -32,7 +33,6 @@ export default function ImageUploader({ photos, setPhotos }) {
         id="fileInput"
       />
 
-      {/* DROPZONE */}
       <div
         onClick={() => document.getElementById('fileInput').click()}
         className="border-2 border-dashed border-white/10 rounded-xl p-10 text-center mb-8 hover:border-[#e7b476]/40 transition cursor-pointer"
@@ -50,30 +50,26 @@ export default function ImageUploader({ photos, setPhotos }) {
         </button>
       </div>
 
-      {/* MINIATURAS */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {photos.map((photo) => (
           <div key={photo.id} className="relative aspect-video rounded-lg overflow-hidden group">
-            <img src={photo.url} className="w-full h-full object-cover" />
+            <img src={photo.url} className="w-full h-full object-cover" alt="Vista previa" />
 
             <button
-              onClick={() => removePhoto(photo.id)}
+              onClick={(e) => {
+                e.stopPropagation(); // Evita abrir el selector de archivos al borrar
+                removePhoto(photo.id);
+              }}
               className="absolute top-2 right-2 bg-black/50 p-1 rounded-full text-white opacity-0 group-hover:opacity-100 transition"
             >
               <FiX size={14} />
             </button>
-
-            {photo.label && (
-              <span className="absolute bottom-2 left-2 bg-[#e7b476] text-black text-[10px] px-2 py-0.5 rounded">
-                {photo.label}
-              </span>
-            )}
           </div>
         ))}
 
         <button
           onClick={() => document.getElementById('fileInput').click()}
-          className="border border-white/5 bg-white/5 rounded-lg flex flex-col items-center justify-center text-white/30 hover:text-white transition gap-2"
+          className="border border-white/5 bg-white/5 rounded-lg flex flex-col items-center justify-center text-white/30 hover:text-white transition gap-2 min-h-25"
         >
           <FiPlus />
           <span className="text-[10px] uppercase font-bold">Añadir más</span>

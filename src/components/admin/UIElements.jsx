@@ -2,7 +2,7 @@ import React from "react";
 import { LuX, LuCheck } from "react-icons/lu";
 
 // --- COMPONENTE: FILA DE VALIDACIÓN DE AUTOS ---
-export function ValidationRow({ img, name, info }) {
+export function ValidationRow({ img, name, info, onAccept, onReject }) {
   return (
     <div className="flex items-center justify-between group">
       <div className="flex items-center gap-4">
@@ -19,10 +19,10 @@ export function ValidationRow({ img, name, info }) {
         </div>
       </div>
       <div className="flex items-center gap-4">
-        <button className="text-white/20 hover:text-red-500 transition-colors p-2" title="Rechazar">
+        <button onClick={onReject} className="text-white/20 hover:text-red-500 transition-colors p-2" title="Rechazar">
           <LuX size={18} />
         </button>
-        <button className="bg-[#e7b476] text-black px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition shadow-lg shadow-[#e7b476]/5">
+        <button onClick={onAccept} className="bg-[#e7b476] text-black px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition shadow-lg shadow-[#e7b476]/5">
           Aceptar
         </button>
       </div>

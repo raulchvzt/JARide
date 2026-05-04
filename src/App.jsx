@@ -15,8 +15,8 @@ import Finanzas from './pages/Finanzas'
     const rol = localStorage.getItem('usuarioRol');
     const estaLogueado = localStorage.getItem('estaAutenticado') === 'true';
 
-    if (!estaLogueado || rol !== 'vendedor') {
-      alert("Acceso denegado. Esta sección es exclusiva para Vendedores.");
+    if (!estaLogueado || (rol !== 'vendedor' && rol !== 'admin')) {
+      alert("Acceso denegado. Esta sección es exclusiva para Vendedores y Administradores.");
       return <Navigate to="/" />;
     }
     

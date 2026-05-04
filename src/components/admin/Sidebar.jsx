@@ -1,11 +1,37 @@
-import React from "react";
-import adminProfileImg from "../../assets/adminEx.jpg";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom"; // Para redireccionar al salir
+import defaultAdminImg from "../../assets/adminEx.jpg";
+import { LuLogOut } from "react-icons/lu"; // Icono de salida
 
-// Eliminamos LuCheckCircle y otros que daban error en tu consola
-// Si quieres usar iconos, asegúrate de que existan en tu versión de react-icons/lu
 export default function Sidebar({ setVista, vistaActiva }) {
-  
-  // Definimos los IDs para que coincidan con los de tu AdminDashboard
+  const navigate = useNavigate();
+  const [menuAbierto, setMenuAbierto] = useState(false);
+  const [usuario, setUsuario] = useState({
+    nombre: "Admin Principal",
+    rol: "Soporte JARide",
+    foto: null
+  });
+
+  useEffect(() => {
+    const nombreLocal = localStorage.getItem('usuarioNombre');
+    const rolLocal = localStorage.getItem('usuarioRol');
+    const fotoLocal = localStorage.getItem('usuarioFoto');
+
+    if (nombreLocal) {
+      setUsuario({
+        nombre: nombreLocal,
+        rol: rolLocal === 'admin' ? "Soporte JARide" : rolLocal,
+        foto: fotoLocal
+      });
+    }
+  }, []);
+
+  // Función para cerrar sesión
+  const handleLogout = () => {
+    localStorage.clear(); // Limpia todo (nombre, rol, etc.)
+    navigate("/login");   // Te manda de vuelta al login
+  };
+
   const menuItems = [
     { id: "dashboard", label: "Dashboard" },
     { id: "usuarios", label: "Usuarios" },
@@ -27,29 +53,49 @@ export default function Sidebar({ setVista, vistaActiva }) {
             key={item.id}
             label={item.label}
             active={vistaActiva === item.id}
-            onClick={() => setVista(item.id)} // <--- Esto activa el cambio de vista
+            onClick={() => setVista(item.id)}
           />
         ))}
       </nav>
 
-      <div className="pt-6 border-t border-white/5 flex items-center gap-3 px-2">
-        <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10 bg-[#e7b476]">
-          <img
-            src={adminProfileImg}
-            alt="Perfil de admin"
-            className="w-full h-full object-cover"
-          />
-        </div>
-        <div>
-          <p className="text-xs font-bold text-white">Admin Principal</p>
-          <p className="text-[10px] text-white/40 font-medium">Soporte JARide</p>
+      {/* SECCIÓN DE PERFIL CON DROPDOWN */}
+      <div className="relative pt-6 border-t border-white/5">
+        
+        {/* MENÚ FLOTANTE (Solo se ve si menuAbierto es true) */}
+        {menuAbierto && (
+          <div className="absolute bottom-full left-0 w-full mb-2 bg-[#111] border border-white/10 rounded-xl overflow-hidden shadow-2xl animate-in slide-in-from-bottom-2 duration-200">
+            <button 
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-500/10 transition-colors text-xs font-bold uppercase tracking-widest"
+            >
+              <LuLogOut size={14} />
+              Cerrar Sesión
+            </button>
+          </div>
+        )}
+
+        {/* BOTÓN DE PERFIL */}
+        <div 
+          onClick={() => setMenuAbierto(!menuAbierto)}
+          className={`flex items-center gap-3 px-2 py-2 rounded-xl cursor-pointer transition-all ${menuAbierto ? 'bg-white/5' : 'hover:bg-white/5'}`}
+        >
+          <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10 bg-[#e7b476] shrink-0">
+            <img
+              src={usuario.foto || defaultAdminImg}
+              alt="Perfil"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold text-white truncate">{usuario.nombre}</p>
+            <p className="text-[10px] text-white/40 font-medium">{usuario.rol}</p>
+          </div>
         </div>
       </div>
     </aside>
   );
 }
 
-// Actualizamos NavItem para recibir el evento onClick
 function NavItem({ label, active = false, onClick }) {
   return (
     <div 
@@ -57,7 +103,6 @@ function NavItem({ label, active = false, onClick }) {
       className={`flex items-center gap-4 px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 
       ${active ? "bg-white/5 text-white" : "text-white/30 hover:bg-white/5 hover:text-white"}`}
     >
-      {/* Indicador visual simple en lugar de icono propenso a errores */}
       <div className={`w-1.5 h-1.5 rounded-full ${active ? "bg-[#e7b476]" : "bg-transparent"}`} />
       <span className="text-sm font-medium">{label}</span>
     </div>
