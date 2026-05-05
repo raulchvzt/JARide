@@ -1,45 +1,132 @@
-import React, { useState } from 'react';
-import { 
-  LuSearch, 
-  LuCar, 
-  LuCheck, // Cambiado: LuCheckCircle no existe en tu versión
-  LuPause, 
-  LuTrash2, 
-  LuPlus 
-} from "react-icons/lu";
+import React, { useState, useEffect } from 'react';
+import { LuSearch, LuCheck, LuPause, LuTrash2 } from "react-icons/lu";
 
 export default function Vehiculos() {
-  const [autos] = useState([
-    { id: 1, modelo: "Porsche GT3 RS", precio: "4,500", status: "Activo", dueño: "Exotic Rents", img: "/src/assets/Porsche-GT3-RS-041.jpg" },
-    { id: 2, modelo: "Audi Q8 S-Line", precio: "1,200", status: "Pendiente", dueño: "Carlos M.", img: "/src/assets/audiq8.jpg" }
-  ]);
+  const [autos, setAutos] = useState([]);
+  const [busqueda, setBusqueda] = useState('');
+  const [cargando, setCargando] = useState(true);
+
+  const cargarAutos = async () => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/vehiculos`);
+      const data = await res.json();
+      setAutos(data);
+    } catch (error) {
+      console.error("Error al cargar vehículos:", error);
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  useEffect(() => {
+    cargarAutos();
+  }, []);
+
+  const eliminarAuto = async (id) => {
+    if (!confirm("¿Seguro que quieres eliminar este vehículo?")) return;
+    await fetch(`${import.meta.env.VITE_API_URL}/api/admin/vehiculos/${id}`, { method: 'DELETE' });
+    cargarAutos();
+  };
+
+  const cambiarEstado = async (id, estado) => {
+    await fetch(`${import.meta.env.VITE_API_URL}/api/admin/vehiculos/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ estado })
+    });
+    cargarAutos();
+  };
+
+  const autosFiltrados = autos.filter(a =>
+    `${a.marca} ${a.modelo}`.toLowerCase().includes(busqueda.toLowerCase())
+  );
+
+  const estadoColor = (estado) => {
+    if (estado === 'aprobado') return 'bg-green-500/10 text-green-400 border-green-500/20';
+    if (estado === 'pendiente') return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
+    if (estado === 'rechazado') return 'bg-red-500/10 text-red-400 border-red-500/20';
+    return 'bg-white/5 text-white/40 border-white/10';
+  };
 
   return (
     <div className="animate-in fade-in duration-700">
       <header className="flex justify-between items-center mb-10">
         <h1 className="text-3xl font-medium text-white">Vehículos</h1>
-        <button className="bg-[#e7b476] text-black px-6 py-2.5 rounded-full text-[10px] font-black uppercase">
-         Añadir Vehículo
-        </button>
+        <span className="text-white/20 text-sm">{autos.length} en total</span>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {autos.map((auto) => (
-          <div key={auto.id} className="bg-[#111] border border-white/5 rounded-3xl overflow-hidden group">
-            <div className="relative h-48">
-              <img src={auto.img} className="w-full h-full object-cover opacity-60" alt={auto.modelo} />
-            </div>
-            <div className="p-6">
-              <h4 className="font-bold text-lg text-white">{auto.modelo}</h4>
-              <div className="flex gap-4 mt-4 border-t border-white/5 pt-4">
-                <button className="text-white/20 hover:text-green-500"><LuCheck size={18} /></button>
-                <button className="text-white/20 hover:text-yellow-500"><LuPause size={18} /></button>
-                <button className="text-white/20 hover:text-red-500"><LuTrash2 size={18} /></button>
+      {/* Buscador */}
+      <div className="relative mb-8 group">
+        <input
+          type="text"
+          placeholder="Buscar por marca o modelo..."
+          value={busqueda}
+          onChange={e => setBusqueda(e.target.value)}
+          className="w-full bg-[#111] border border-white/10 rounded-xl py-3 px-12 text-sm outline-none focus:border-[#e7b476]/40 transition-all"
+        />
+        <LuSearch className="absolute left-4 top-3.5 text-white/20 group-focus-within:text-[#e7b476]" size={18} />
+      </div>
+
+      {cargando ? (
+        <div className="py-20 text-center text-white/20 text-sm">Cargando vehículos...</div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {autosFiltrados.map((auto) => (
+            <div key={auto.id} className="bg-[#111] border border-white/5 rounded-3xl overflow-hidden group">
+              <div className="relative h-48">
+                <img
+                  src={auto.photos?.[0] || 'https://via.placeholder.com/600x400?text=Sin+Foto'}
+                  className="w-full h-full object-cover opacity-70 group-hover:opacity-90 transition-opacity"
+                  alt={auto.modelo}
+                />
+                <span className={`absolute top-3 left-3 px-3 py-1 rounded-full text-[9px] font-black uppercase border ${estadoColor(auto.estado)}`}>
+                  {auto.estado}
+                </span>
+              </div>
+
+              <div className="p-6">
+                <div className="mb-1 text-[10px] text-white/30 uppercase tracking-widest">{auto.marca}</div>
+                <h4 className="font-bold text-lg text-white">{auto.modelo}</h4>
+                <div className="flex gap-3 text-[11px] text-white/30 mt-1">
+                  <span>{auto.anio}</span>
+                  <span>·</span>
+                  <span>USD$ {parseInt(auto.precio).toLocaleString()}</span>
+                  <span>·</span>
+                  <span>{auto.vendedor}</span>
+                </div>
+
+                <div className="flex gap-3 mt-5 border-t border-white/5 pt-4">
+                  <button
+                    onClick={() => cambiarEstado(auto.id, 'aprobado')}
+                    title="Aprobar"
+                    className="p-2 hover:bg-green-500/10 rounded-lg text-white/20 hover:text-green-500 transition-colors"
+                  >
+                    <LuCheck size={18} />
+                  </button>
+                  <button
+                    onClick={() => cambiarEstado(auto.id, 'pendiente')}
+                    title="Pausar"
+                    className="p-2 hover:bg-yellow-500/10 rounded-lg text-white/20 hover:text-yellow-500 transition-colors"
+                  >
+                    <LuPause size={18} />
+                  </button>
+                  <button
+                    onClick={() => eliminarAuto(auto.id)}
+                    title="Eliminar"
+                    className="p-2 hover:bg-red-500/10 rounded-lg text-white/20 hover:text-red-500 transition-colors ml-auto"
+                  >
+                    <LuTrash2 size={18} />
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
+
+      {!cargando && autosFiltrados.length === 0 && (
+        <div className="py-20 text-center text-white/20 text-sm">No se encontraron vehículos</div>
+      )}
     </div>
   );
 }

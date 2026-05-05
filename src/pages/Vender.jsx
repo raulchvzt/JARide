@@ -33,7 +33,7 @@ export default function Vender() {
         const dataForm = new FormData();
         dataForm.append('foto', photoObj.file); 
 
-        const res = await fetch('http://localhost:5000/api/subir-foto', { 
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/subir-foto`, { 
           method: 'POST', 
           body: dataForm 
         });
@@ -57,7 +57,7 @@ export default function Vender() {
         verificado: rolUsuario === 'admin' // Agregar campo verificado si es admin
       };
 
-      const resFinal = await fetch('http://localhost:5000/api/autos', {
+      const resFinal = await fetch(`${import.meta.env.VITE_API_URL}/api/autos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(autoFinal)

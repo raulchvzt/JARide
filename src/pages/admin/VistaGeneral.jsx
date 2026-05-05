@@ -17,7 +17,7 @@ export default function VistaGeneral() {
   // 1. Cargar autos reales del servidor
   const cargarPendientes = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/autos');
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/autos`);
       const data = await res.json();
       // Solo mostramos los que tienen estado "pendiente"
       const soloPendientes = data.filter(auto => auto.estado === "pendiente");
@@ -34,7 +34,7 @@ export default function VistaGeneral() {
   // 2. Función para Aprobar o Rechazar (Conectada a los botones del componente)
   const manejarDecision = async (id, nuevoEstado) => {
     try {
-      await fetch('http://localhost:5000/api/admin/revisar-auto', {
+      await fetch(`${import.meta.env.VITE_API_URL}/api/admin/revisar-auto`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, nuevoEstado })

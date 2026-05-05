@@ -48,7 +48,7 @@ export default function CrearCuenta() {
         }
 
         try {
-            const response = await fetch('http://127.0.0.1:5000/api/registro', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/registro`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
@@ -81,7 +81,7 @@ export default function CrearCuenta() {
         if (debounceRef.current) clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(async () => {
             try {
-                const url = `/api/nominatim/search?q=${encodeURIComponent(texto)}&format=json&countrycodes=mx&addressdetails=1&limit=6&dedupe=1`;
+                const url = `${import.meta.env.VITE_API_URL}/api/nominatim/search?q=${encodeURIComponent(texto)}&format=json&countrycodes=mx&addressdetails=1&limit=6&dedupe=1`;
                 const res = await fetch(url);
                 const data = await res.json();
                 setSugerencias(data);

@@ -16,7 +16,7 @@ export default function Login() {
 
     try {
       // Usamos la IP 127.0.0.1 para evitar problemas con 'localhost'
-      const response = await fetch('http://127.0.0.1:5000/api/login', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })

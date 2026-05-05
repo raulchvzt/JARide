@@ -15,7 +15,7 @@ export default function VentanaComprar() {
     useEffect(() => {
         const cargarAutos = async () => {
             try {
-                const res = await fetch('http://localhost:5000/api/autos');
+                const res = await fetch(`${import.meta.env.VITE_API_URL}/api/autos`);
                 const data = await res.json();
                 
                 const autosFormateados = data.map(a => ({
