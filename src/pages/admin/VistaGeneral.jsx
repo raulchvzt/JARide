@@ -3,35 +3,43 @@ import StatCard from "../../components/admin/StatCard";
 import DashboardChart from "../../components/admin/DashboardChart";
 import { ValidationRow, ReportItem, ActividadItem } from "../../components/admin/UIElements";
 
-import { 
-  LuCar, 
-  LuTrendingUp, 
-  LuUsers, 
+import {
+  LuCar,
+  LuTrendingUp,
+  LuUsers,
   LuCircleAlert,
-  LuHistory 
+  LuHistory
 } from "react-icons/lu";
 
 export default function VistaGeneral() {
   const [pendientes, setPendientes] = useState([]);
+  const [stats, setStats] = useState(null);
 
-  // 1. Cargar autos reales del servidor
   const cargarPendientes = async () => {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/autos`);
       const data = await res.json();
-      // Solo mostramos los que tienen estado "pendiente"
-      const soloPendientes = data.filter(auto => auto.estado === "pendiente");
-      setPendientes(soloPendientes);
+      setPendientes(data.filter(auto => auto.estado === "pendiente"));
     } catch (error) {
       console.error("Error al conectar con la API:", error);
     }
   };
 
+  const cargarStats = async () => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/stats`);
+      const data = await res.json();
+      setStats(data);
+    } catch (error) {
+      console.error("Error al cargar estadísticas:", error);
+    }
+  };
+
   useEffect(() => {
     cargarPendientes();
+    cargarStats();
   }, []);
 
-  // 2. Función para Aprobar o Rechazar (Conectada a los botones del componente)
   const manejarDecision = async (id, nuevoEstado) => {
     try {
       await fetch(`${import.meta.env.VITE_API_URL}/api/admin/revisar-auto`, {
@@ -39,23 +47,22 @@ export default function VistaGeneral() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, nuevoEstado })
       });
-      cargarPendientes(); // Refresca la lista automáticamente
+      cargarPendientes();
+      cargarStats(); // Refrescar stats también al aprobar/rechazar
     } catch (error) {
       console.error("Error al procesar la revisión:", error);
-      alert("Error al procesar la revisión");
     }
   };
 
   const obtenerFechaActual = () => {
     const fecha = new Date();
     const opciones = { day: "numeric", month: "long", year: "numeric" };
-    const fechaString = fecha.toLocaleDateString("es-ES", opciones);
-    return fechaString.replace(/(^\w|\s\w)/g, (m) => m.toUpperCase());
+    return fecha.toLocaleDateString("es-ES", opciones).replace(/(^\w|\s\w)/g, m => m.toUpperCase());
   };
 
   return (
     <div className="animate-in fade-in duration-700">
-      
+
       {/* HEADER */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
         <div>
@@ -71,10 +78,31 @@ export default function VistaGeneral() {
 
       {/* ESTADÍSTICAS */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
-        <StatCard title="Autos en Renta" value="1,250" trend="+12%" subtext="desde el mes pasado" icon={<LuCar />} />
-        <StatCard title="Autos Vendidos" value="342" trend="+5%" subtext="desde el mes pasado" icon={<LuTrendingUp />} />
-        <StatCard title="Nuevos Usuarios" value="89" subtext="Últimos 30 días" icon={<LuUsers />} />
-        <StatCard title="Reportes Activos" value="12" alert subtext="Atención urgente" icon={<LuCircleAlert  />} />
+        <StatCard
+          title="Autos Publicados"
+          value={stats ? stats.autosAprobados.toLocaleString() : '—'}
+          subtext="en catálogo actualmente"
+          icon={<LuCar />}
+        />
+        <StatCard
+          title="Total de Autos"
+          value={stats ? stats.totalAutos.toLocaleString() : '—'}
+          subtext="registrados en plataforma"
+          icon={<LuTrendingUp />}
+        />
+        <StatCard
+          title="Usuarios Registrados"
+          value={stats ? stats.totalUsuarios.toLocaleString() : '—'}
+          subtext={stats ? `${stats.vendedores} vendedores · ${stats.compradores} compradores` : ''}
+          icon={<LuUsers />}
+        />
+        <StatCard
+          title="Pendientes de Revisión"
+          value={stats ? stats.autosPendientes.toLocaleString() : '—'}
+          alert={stats?.autosPendientes > 0}
+          subtext={stats?.autosPendientes > 0 ? "Requieren atención" : "Todo al día"}
+          icon={<LuCircleAlert />}
+        />
       </div>
 
       {/* GRÁFICA */}
@@ -91,28 +119,28 @@ export default function VistaGeneral() {
               {pendientes.length} POR REVISAR
             </span>
           </div>
-          
+
           <div className="space-y-6">
             {pendientes.length > 0 ? (
               pendientes.map((auto) => (
-                <ValidationRow 
+                <ValidationRow
                   key={auto.id}
-                  img={auto.photos[0] || "/placeholder-car.jpg"} 
-                  name={`${auto.marca} ${auto.modelo}`} 
-                  info={`Subido por ${auto.vendedor} • KM: ${auto.km} • $${auto.precio}`} 
+                  img={auto.photos[0] || "/placeholder-car.jpg"}
+                  name={`${auto.marca} ${auto.modelo}`}
+                  info={`Subido por ${auto.vendedor} • KM: ${auto.km} • $${auto.precio}`}
                   onAccept={() => manejarDecision(auto.id, 'aprobado')}
                   onReject={() => manejarDecision(auto.id, 'rechazado')}
                 />
               ))
             ) : (
               <div className="py-10 text-center border-2 border-dashed border-white/5 rounded-2xl">
-                 <p className="text-white/20 text-xs font-black uppercase tracking-widest">No hay solicitudes pendientes</p>
+                <p className="text-white/20 text-xs font-black uppercase tracking-widest">No hay solicitudes pendientes</p>
               </div>
             )}
           </div>
         </div>
 
-        {/* REPORTE Y ACTIVIDAD (Se mantienen igual) */}
+        {/* REPORTES Y ACTIVIDAD */}
         <div className="flex flex-col gap-6">
           <div className="bg-[#111] rounded-3xl border border-white/5 p-8 shadow-2xl">
             <div className="flex justify-between items-center mb-8">
@@ -128,12 +156,16 @@ export default function VistaGeneral() {
           <div className="bg-[#111]/50 rounded-3xl border border-white/5 p-8">
             <div className="flex items-center gap-2 mb-6 text-white/60">
               <LuHistory size={14} />
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-white/40">Actividad</h3>
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-white/40">Actividad Reciente</h3>
             </div>
             <div className="space-y-3">
-              <ActividadItem texto="Nuevo usuario registrado: Ana P." tiempo="10m" />
-              <ActividadItem texto="Pago procesado #8829" tiempo="1h" />
-              <ActividadItem texto="Reporte cerrado por soporte" tiempo="2h" />
+              {stats && (
+                <>
+                  <ActividadItem texto={`${stats.totalUsuarios} usuarios registrados en total`} tiempo="hoy" />
+                  <ActividadItem texto={`${stats.autosAprobados} autos aprobados en catálogo`} tiempo="hoy" />
+                  <ActividadItem texto={`${stats.autosPendientes} autos esperando revisión`} tiempo="hoy" />
+                </>
+              )}
             </div>
           </div>
         </div>
