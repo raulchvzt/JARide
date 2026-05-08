@@ -1,10 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { LuSearch, LuCheck, LuPause, LuTrash2 } from "react-icons/lu";
+import { LuSearch, LuCheck, LuPause, LuTrash2, LuInfo } from "react-icons/lu";
 
 export default function Vehiculos() {
   const [autos, setAutos] = useState([]);
   const [busqueda, setBusqueda] = useState('');
   const [cargando, setCargando] = useState(true);
+  
+  // ESTADO PARA EL MENSAJE DE NOTIFICACIÓN
+  const [notificacion, setNotificacion] = useState({ visible: false, mensaje: '', tipo: '' });
+
+  const mostrarMensaje = (msg, tipo = 'success') => {
+    setNotificacion({ visible: true, mensaje: msg, tipo });
+    // Ocultar automáticamente después de 3 segundos
+    setTimeout(() => {
+      setNotificacion({ visible: false, mensaje: '', tipo: '' });
+    }, 3000);
+  };
 
   const cargarAutos = async () => {
     try {
@@ -24,17 +35,27 @@ export default function Vehiculos() {
 
   const eliminarAuto = async (id) => {
     if (!confirm("¿Seguro que quieres eliminar este vehículo?")) return;
-    await fetch(`${import.meta.env.VITE_API_URL}/api/admin/vehiculos/${id}`, { method: 'DELETE' });
-    cargarAutos();
+    try {
+      await fetch(`${import.meta.env.VITE_API_URL}/api/admin/vehiculos/${id}`, { method: 'DELETE' });
+      mostrarMensaje("Vehículo eliminado correctamente", "error"); // Color rojo para eliminar
+      cargarAutos();
+    } catch (error) {
+      mostrarMensaje("Error al eliminar", "error");
+    }
   };
 
   const cambiarEstado = async (id, estado) => {
-    await fetch(`${import.meta.env.VITE_API_URL}/api/admin/vehiculos/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ estado })
-    });
-    cargarAutos();
+    try {
+      await fetch(`${import.meta.env.VITE_API_URL}/api/admin/vehiculos/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado })
+      });
+      mostrarMensaje(`Estado actualizado a: ${estado}`);
+      cargarAutos();
+    } catch (error) {
+      mostrarMensaje("Error al actualizar estado", "error");
+    }
   };
 
   const autosFiltrados = autos.filter(a =>
@@ -49,7 +70,22 @@ export default function Vehiculos() {
   };
 
   return (
-    <div className="animate-in fade-in duration-700">
+    <div className="animate-in fade-in duration-700 relative">
+      
+      {/* --- COMPONENTE DE NOTIFICACIÓN FLOTANTE --- */}
+      {notificacion.visible && (
+        <div className={`fixed bottom-10 right-10 z-100 flex items-center gap-3 px-6 py-4 rounded-2xl border shadow-2xl animate-in slide-in-from-right duration-300 ${
+          notificacion.tipo === 'error' 
+          ? 'bg-red-950 border-red-500/50 text-red-200' 
+          : 'bg-[#1a1a1a] border-[#e7b476]/30 text-[#e7b476]'
+        }`}>
+          <div className={`p-2 rounded-full ${notificacion.tipo === 'error' ? 'bg-red-500/20' : 'bg-[#e7b476]/20'}`}>
+            <LuInfo size={18} />
+          </div>
+          <p className="text-sm font-medium tracking-wide">{notificacion.mensaje}</p>
+        </div>
+      )}
+
       <header className="flex justify-between items-center mb-10">
         <h1 className="text-3xl font-medium text-white">Vehículos</h1>
         <span className="text-white/20 text-sm">{autos.length} en total</span>
