@@ -8,6 +8,7 @@ import Verificados from './pages/Verificados'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import DetallesCompra from './pages/DetallesCompra'
 import Finanzas from './pages/Finanzas'
+import Perfil from './pages/Perfil'
 
 
   // COMPONENTE DE PROTECCIÓN PARA VENDEDORES
@@ -50,6 +51,7 @@ function App() {
       <Route path="/auto/:id" element={<DetallesCompra />} />
       <Route path='/finanzas' element={<Finanzas />} />
       <Route path='/verificados' element={<Verificados />} />
+     <Route path="/perfil" element={<Perfil />} />
 
       {/* RUTAS PROTEGIDAS */}
       <Route 
