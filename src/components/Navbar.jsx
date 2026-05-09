@@ -5,7 +5,7 @@ export default function Navbar() {
   const [usuario, setUsuario] = useState(() =>
     localStorage.getItem("usuarioNombre"),
   );
-  const [usuarioImagen, setUsuarioImagen] = useState(() =>
+  const [usuarioImagen] = useState(() =>
     localStorage.getItem("usuarioFoto"),
   );
   const usuarioRol = localStorage.getItem("usuarioRol")?.toLowerCase();
