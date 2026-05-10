@@ -53,6 +53,7 @@ export default function Vender() {
         ...formData, 
         photos: urlsSubidas, 
         vendedor: localStorage.getItem('usuarioNombre') || 'Vendedor JARide',
+        vendedor_email: localStorage.getItem('usuarioEmail') || '',
         estado: rolUsuario === 'admin' ? "aprobado" : "pendiente", // Admin sube aprobado automáticamente
         verificado: rolUsuario === 'admin' // Agregar campo verificado si es admin
       };

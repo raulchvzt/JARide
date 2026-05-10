@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 
@@ -16,15 +16,13 @@ const AUTO_ESTATICO = {
 export default function DetallesCompra() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [auto, setAuto] = useState(AUTO_ESTATICO);
-  const [cargando, setCargando] = useState(!id);
-  const [imgActiva, setImgActiva] = useState(AUTO_ESTATICO.photos[0]);
+  const [auto, setAuto] = useState(null);
+  const [cargando, setCargando] = useState(true);
+  const [imgActiva, setImgActiva] = useState('');
   const [error, setError] = useState('');
-  const initialized = useRef(false);
 
   useEffect(() => {
-    if (initialized.current || !id) return;
-    initialized.current = true;
+    if (!id) { setAuto(AUTO_ESTATICO); setImgActiva(AUTO_ESTATICO.photos[0]); setCargando(false); return; }
 
     fetch(`${import.meta.env.VITE_API_URL}/api/autos/${id}`)
       .then(r => r.json())
@@ -173,7 +171,15 @@ export default function DetallesCompra() {
           </div>
 
           {/* Botones */}
-          <button style={{ width: '100%', padding: '14px', background: '#f1c98a', color: '#000', border: 'none', borderRadius: '12px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', marginBottom: '10px' }}>
+          <button
+            onClick={() => {
+              if (!localStorage.getItem('estaAutenticado')) {
+                navigate('/login');
+                return;
+              }
+              navigate('/mensajes', { state: { para_email: auto.vendedor_email, para_nombre: auto.vendedor, asunto: `Consulta sobre ${auto.marca} ${auto.modelo}` } });
+            }}
+            style={{ width: '100%', padding: '14px', background: '#f1c98a', color: '#000', border: 'none', borderRadius: '12px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', marginBottom: '10px' }}>
             Contactar al vendedor
           </button>
           <button style={{ width: '100%', padding: '14px', background: 'none', color: '#fff', border: '1px solid #2a2a2a', borderRadius: '12px', fontSize: '14px', fontWeight: 500, cursor: 'pointer', marginBottom: '20px' }}>

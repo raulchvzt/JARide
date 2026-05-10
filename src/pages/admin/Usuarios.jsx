@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { LuSearch, LuUserPlus, LuTrash2, LuMail } from "react-icons/lu";
+import { useNavigate } from 'react-router-dom';
 
 export default function Usuarios() {
   const [users, setUsers] = useState([]);
   const [busqueda, setBusqueda] = useState('');
   const [cargando, setCargando] = useState(true);
+  const navigate = useNavigate();
 
   const cargarUsuarios = async () => {
     try {
@@ -105,7 +107,7 @@ export default function Usuarios() {
                   <td className="px-8 py-5 text-xs text-white/40">{user.telefono || '—'}</td>
                   <td className="px-8 py-5 text-right">
                     <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="p-2 hover:bg-white/5 rounded-lg text-white/40 hover:text-white">
+                      <button onClick={() => navigate('/mensajes', { state: { para_email: user.email, para_nombre: user.nombre, asunto: '' } })} className="p-2 hover:bg-white/5 rounded-lg text-white/40 hover:text-white">
                         <LuMail size={16} />
                       </button>
                       <button
