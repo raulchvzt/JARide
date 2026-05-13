@@ -36,7 +36,6 @@ const Card = ({ title, sub, img, video, span = "", desc = "" }) => {
         <p className="text-[#e7b476] text-[10px] uppercase tracking-[0.4em] mb-3 font-bold">{sub}</p>
         <h3 className="text-3xl text-white font-light tracking-tight">{title}</h3>
         {desc && <p className="text-white/40 text-xs mt-3 font-light max-w-xs">{desc}</p>}
-        <a href="#" className="text-white/40 text-[10px] uppercase tracking-widest mt-6 group-hover:text-white transition">Ver detalles</a>
       </div>
     </div>
   );
