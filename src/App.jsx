@@ -9,6 +9,7 @@ import AdminDashboard from './pages/admin/AdminDashboard'
 import DetallesCompra from './pages/DetallesCompra'
 import Finanzas from './pages/Finanzas'
 import Perfil from './pages/Perfil'
+import CrearReporte from './pages/CrearReportes'
 
 
   // COMPONENTE DE PROTECCIÓN PARA VENDEDORES
@@ -52,6 +53,8 @@ function App() {
       <Route path='/finanzas' element={<Finanzas />} />
       <Route path='/verificados' element={<Verificados />} />
      <Route path="/perfil" element={<Perfil />} />
+     <Route path="/reportes" element={<CrearReporte />} />
+
 
       {/* RUTAS PROTEGIDAS */}
       <Route 

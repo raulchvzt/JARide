@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
 
+
+
+
+
 export default function Finanzas() {
-    const precioVehiculo = 185000;
+    const [precioVehiculo, setPrecioVehiculo] = useState(185000);
 
     const planes = [
         { id: 'normal', nombre: 'Normal', tasa: 8.9, descripcion: 'Sin requisitos adicionales' },
@@ -21,14 +25,17 @@ export default function Finanzas() {
     const financiado = precioVehiculo - enganche;
     const tasaMensual = tasaAnual / 12;
 
-    const calcularPago = (meses) => Math.round(
-        (financiado * tasaMensual * Math.pow(1 + tasaMensual, meses)) /
-        (Math.pow(1 + tasaMensual, meses) - 1)
-    );
+    const calcularPago = (meses) => {
+        if (financiado <= 0) return 0;
+        return Math.round(
+            (financiado * tasaMensual * Math.pow(1 + tasaMensual, meses)) /
+            (Math.pow(1 + tasaMensual, meses) - 1)
+        );
+    };
 
     const pagoMensual = calcularPago(plazo);
     const totalPagar = pagoMensual * plazo + enganche;
-    const totalIntereses = totalPagar - precioVehiculo;
+    const totalIntereses = Math.max(0, totalPagar - precioVehiculo);
 
     const formatPrecio = (p) => 'MX$ ' + p.toLocaleString('en-MX');
 
@@ -40,18 +47,48 @@ export default function Finanzas() {
         'Edad mínima: 21 años',
     ];
 
+    const manejarSolicitud = () => {
+        // REEMPLAZA ESTO: Pon tu número de WhatsApp con clave de país (ej. 521 para México seguido de tus 10 dígitos)
+        // Ejemplo: "5213312345678"
+        const telefonoAsesor = "5213122009437"; 
+        
+        // Estructuramos el mensaje usando saltos de línea (%0A) y negritas de WhatsApp (*)
+        const mensaje = `¡Hola JARide! Me interesa solicitar el crédito para un vehículo.%0A%0A` +
+                        `*DETALLES DE MI COTIZACIÓN:*%0A` +
+                        `• *Precio del auto:* ${formatPrecio(precioVehiculo)}%0A` +
+                        `• *Plan seleccionado:* ${plan.nombre} (${plan.tasa}% tasa)%0A` +
+                        `• *Enganche (${enganchePct}%):* ${formatPrecio(enganche)}%0A` +
+                        `• *Plazo:* ${plazo} meses%0A` +
+                        `• *Mensualidad estimada:* ${formatPrecio(pagoMensual)}/mes%0A` +
+                        `• *Total intereses:* ${formatPrecio(totalIntereses)}%0A%0A` +
+                        `¿Me podrían indicar cuáles son los siguientes pasos para iniciar el trámite?`;
+
+        // Crea el enlace final de la API oficial de WhatsApp
+        const urlWhatsApp = `https://api.whatsapp.com/send?phone=${telefonoAsesor}&text=${mensaje}`;
+        
+        // Abre una nueva pestaña en el navegador con el chat listo
+        window.open(urlWhatsApp, '_blank');
+    };
+
     return (
-        <div style={{ background: '#0a0a0a', minHeight: '100vh', color: '#fff', fontFamily: 'sans-serif' }}>
+        <div style={{ background: '#0a0a0a', minHeight: '100vh', color: '#fff', fontFamily: 'sans-serif', paddingBottom: '100px' }}>
             <Navbar />
 
+            {/* CONTENEDOR PRINCIPAL MODIFICADO */}
             <div style={{
-                display: 'flex', alignItems: 'flex-start', gap: '60px',
-                maxWidth: '1200px', margin: '0 auto', padding: '80px 40px',
+                display: 'flex', 
+                flexWrap: 'wrap', 
+                gap: '60px',
+                maxWidth: '1200px', 
+                margin: '0 auto', 
+                // SOLUCIÓN: Agregamos 120px arriba para empujar el contenido hacia abajo del Navbar flotante
+                padding: '120px 20px 40px 20px', 
+                alignItems: 'flex-start' // Volvemos a alinear arriba para evitar estiramientos raros
             }}>
 
                 {/* COLUMNA IZQUIERDA */}
-                <div style={{ flex: 1, position: 'relative' }}>
-                    <div style={{ borderRadius: '20px', overflow: 'hidden', height: '520px', position: 'relative' }}>
+                <div style={{ flex: '1 1 450px', minWidth: '320px' }}>
+                    <div style={{ borderRadius: '20px', overflow: 'hidden', height: '450px', position: 'relative' }}>
                         <img
                             src="https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=800&q=80"
                             alt="Financiamiento"
@@ -98,7 +135,7 @@ export default function Finanzas() {
                 </div>
 
                 {/* COLUMNA DERECHA */}
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: '1 1 500px', minWidth: '320px' }}>
                     <div style={{ fontSize: '11px', color: '#f1c98a', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '16px' }}>
                         Simulador Financiero
                     </div>
@@ -106,16 +143,44 @@ export default function Finanzas() {
                         Diseñado para<br />compradores que<br />esperan flexibilidad.
                     </h1>
                     <p style={{ fontSize: '14px', color: '#9ca3af', lineHeight: 1.7, marginBottom: '28px' }}>
-                        Proyecta tu inversión en segundos. Ajusta el enganche y el plazo para encontrar el plan que mejor se adapte a ti.
+                        Proyecta tu inversión en segundos. Ajusta el precio, el enganche y el plazo para encontrar el plan ideal.
                     </p>
+
+                    {/* INPUT PARA EDITAR EL PRECIO MANUALMENTE */}
+                    <div style={{ marginBottom: '24px', background: '#111', border: '1px solid #1f1f1f', borderRadius: '16px', padding: '16px 20px' }}>
+                        <div style={{ fontSize: '12px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
+                            Establecer precio del vehículo (MXN)
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
+                            <span style={{ position: 'absolute', left: '16px', color: '#f1c98a', fontWeight: 700, fontSize: '18px' }}>$</span>
+                            <input
+                                type="number"
+                                value={precioVehiculo}
+                                onChange={e => setPrecioVehiculo(Math.max(0, Number(e.target.value)))}
+                                style={{
+                                    width: '100%',
+                                    background: '#0a0a0a',
+                                    border: '1px solid #2a2a2a',
+                                    borderRadius: '10px',
+                                    padding: '12px 12px 12px 35px',
+                                    color: '#fff',
+                                    fontSize: '18px',
+                                    fontWeight: 700,
+                                    outline: 'none',
+                                    fontFamily: 'inherit'
+                                }}
+                                placeholder="Escribe el valor del auto..."
+                            />
+                        </div>
+                    </div>
 
                     {/* Selector de plan */}
                     <div style={{ marginBottom: '28px' }}>
                         <div style={{ fontSize: '12px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '12px' }}>Plan de financiamiento</div>
-                        <div style={{ display: 'flex', gap: '10px' }}>
+                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                             {planes.map(p => (
                                 <div key={p.id} onClick={() => setPlanSeleccionado(p.id)} style={{
-                                    flex: 1, padding: '12px', borderRadius: '12px', cursor: 'pointer',
+                                    flex: '1 1 140px', padding: '12px', borderRadius: '12px', cursor: 'pointer',
                                     border: planSeleccionado === p.id ? '1.5px solid #f1c98a' : '1.5px solid #2a2a2a',
                                     background: planSeleccionado === p.id ? '#f1c98a10' : '#111',
                                     transition: 'all 0.15s',
@@ -130,10 +195,10 @@ export default function Finanzas() {
 
                     <div style={{ borderTop: '1px solid #1f1f1f', paddingTop: '24px' }}>
 
-                        {/* Precio */}
+                        {/* Mostrar Precio Dinámico */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-                            <span style={{ fontSize: '14px', color: '#9ca3af' }}>Precio del vehículo</span>
-                            <span style={{ fontSize: '15px', fontWeight: 700 }}>{formatPrecio(precioVehiculo)}</span>
+                            <span style={{ fontSize: '14px', color: '#9ca3af' }}>Precio base fijado</span>
+                            <span style={{ fontSize: '15px', fontWeight: 700, color: '#fff' }}>{formatPrecio(precioVehiculo)}</span>
                         </div>
 
                         {/* Barra enganche vs financiado */}
@@ -143,7 +208,6 @@ export default function Finanzas() {
                                 <span style={{ fontSize: '15px', fontWeight: 700, color: '#f1c98a' }}>{formatPrecio(enganche)}</span>
                             </div>
                             
-                          
                             <input
                                 type="range" min="10" max="60" step="5"
                                 value={enganchePct}
@@ -151,8 +215,8 @@ export default function Finanzas() {
                                 style={{ width: '100%', accentColor: '#f1c98a', cursor: 'pointer' }}
                             />
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#4b5563', marginTop: '4px' }}>
-                                <span>Enganche: {formatPrecio(enganche)}</span>
-                                <span>Financiado: {formatPrecio(financiado)}</span>
+                                <span>Monto Enganche: {formatPrecio(enganche)}</span>
+                                <span>Monto Financiado: {formatPrecio(financiado)}</span>
                             </div>
                         </div>
 
@@ -162,10 +226,10 @@ export default function Finanzas() {
                                 <span style={{ fontSize: '14px', color: '#9ca3af' }}>Plazo (Meses)</span>
                                 <span style={{ fontSize: '15px', fontWeight: 700 }}>{plazo}</span>
                             </div>
-                            <div style={{ display: 'flex', gap: '8px' }}>
+                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                                 {[24, 36, 48, 60, 72].map(m => (
                                     <button key={m} onClick={() => setPlazo(m)} style={{
-                                        flex: 1, padding: '10px 0', borderRadius: '10px', border: 'none',
+                                        flex: '1 1 50px', padding: '10px 0', borderRadius: '10px', border: 'none',
                                         background: plazo === m ? '#f1c98a' : '#1a1a1a',
                                         color: plazo === m ? '#000' : '#9ca3af',
                                         fontSize: '13px', fontWeight: plazo === m ? 700 : 400,
@@ -177,14 +241,15 @@ export default function Finanzas() {
                             </div>
                         </div>
 
-                        {/* Resultado */}
+                        {/* Resultado Tarjeta */}
                         <div style={{ background: '#111', border: '1px solid #2a2a2a', borderRadius: '16px', padding: '20px 24px', marginBottom: '16px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '16px' }}>
                                 <div>
                                     <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '6px' }}>Pago mensual estimado</div>
                                     <div style={{ fontSize: '32px', fontWeight: 800, color: '#f1c98a' }}>{formatPrecio(pagoMensual)}</div>
                                 </div>
-                                <button style={{
+                                <button onClick={manejarSolicitud}
+                                style={{
                                     background: '#fff', color: '#000', border: 'none',
                                     borderRadius: '40px', padding: '14px 20px',
                                     fontSize: '13px', fontWeight: 700, cursor: 'pointer',
@@ -205,16 +270,6 @@ export default function Finanzas() {
                                 ))}
                             </div>
                         </div>
-
-                        {/* CTA secundario */}
-                        <button style={{
-                            width: '100%', padding: '14px', background: 'none',
-                            border: '1px solid #2a2a2a', borderRadius: '12px',
-                            color: '#9ca3af', fontSize: '14px', cursor: 'pointer',
-                            marginBottom: '20px', fontFamily: 'inherit',
-                        }}>
-                            💬 Hablar con un asesor financiero
-                        </button>
 
                         {/* Requisitos acordeón */}
                         <div style={{ background: '#111', border: '1px solid #1f1f1f', borderRadius: '12px', overflow: 'hidden', marginBottom: '20px' }}>
