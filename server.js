@@ -480,7 +480,9 @@ app.get('/api/autos/verificados', (req, res) => {
 app.get('/api/autos/:id', (req, res) => {
   const auto = db.prepare('SELECT * FROM autos WHERE id = ?').get(req.params.id);
   if (!auto) return res.status(404).json({ success: false, message: 'Auto no encontrado' });
-  res.json({ success: true, ...autoConFotos(auto) });
+  // Traer ubicación del vendedor
+  const vendedor = db.prepare('SELECT direccion FROM usuarios WHERE email = ?').get(auto.vendedor_email);
+  res.json({ success: true, ...autoConFotos(auto), ubicacion_vendedor: vendedor?.direccion || null });
 });
 
 // ------------------------------------------------------------------
