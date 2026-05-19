@@ -318,6 +318,73 @@ app.get('/api/admin/graficas/usuarios-mes', (req, res) => {
 });
 
 // ------------------------------------------------------------------
+// RUTAS: REPORTES
+// ------------------------------------------------------------------
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS reportes (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario_email TEXT NOT NULL,
+    titulo       TEXT NOT NULL,
+    descripcion  TEXT NOT NULL,
+    categoria    TEXT NOT NULL DEFAULT 'general',
+    estado       TEXT NOT NULL DEFAULT 'pendiente',
+    fecha        TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+  );
+`);
+
+// Crear reporte
+app.post('/api/reportes', (req, res) => {
+  const { usuario_email, titulo, descripcion, categoria } = req.body;
+  if (!usuario_email || !titulo || !descripcion)
+    return res.status(400).json({ success: false, message: 'Faltan campos' });
+  db.prepare(`INSERT INTO reportes (usuario_email, titulo, descripcion, categoria) VALUES (?, ?, ?, ?)`)
+    .run(usuario_email, titulo, descripcion, categoria || 'general');
+  res.json({ success: true });
+});
+
+// Obtener todos los reportes (admin)
+app.get('/api/admin/reportes', (req, res) => {
+  const reportes = db.prepare(`
+    SELECT r.*, u.nombre as usuario_nombre, u.fotoPerfil as usuario_foto, u.rol as usuario_rol
+    FROM reportes r
+    LEFT JOIN usuarios u ON u.email = r.usuario_email
+    ORDER BY r.fecha DESC
+  `).all();
+  res.json(reportes);
+});
+
+// Obtener reportes del usuario
+app.get('/api/reportes/mis-reportes', (req, res) => {
+  const { email } = req.query;
+  const reportes = db.prepare('SELECT * FROM reportes WHERE usuario_email = ? ORDER BY fecha DESC').all(email);
+  res.json(reportes);
+});
+
+// Cambiar estado del reporte
+app.patch('/api/admin/reportes/:id', (req, res) => {
+  const { estado } = req.body;
+  db.prepare('UPDATE reportes SET estado = ? WHERE id = ?').run(estado, req.params.id);
+  res.json({ success: true });
+});
+
+// Eliminar reporte
+app.delete('/api/admin/reportes/:id', (req, res) => {
+  db.prepare('DELETE FROM reportes WHERE id = ?').run(req.params.id);
+  res.json({ success: true });
+});
+
+// Stats de reportes para dashboard
+app.get('/api/admin/reportes/stats', (req, res) => {
+  res.json({
+    total:      db.prepare("SELECT COUNT(*) as t FROM reportes").get().t,
+    pendientes: db.prepare("SELECT COUNT(*) as t FROM reportes WHERE estado = 'pendiente'").get().t,
+    urgentes:   db.prepare("SELECT COUNT(*) as t FROM reportes WHERE estado = 'urgente'").get().t,
+    resueltos:  db.prepare("SELECT COUNT(*) as t FROM reportes WHERE estado = 'resuelto'").get().t,
+  });
+});
+
+// ------------------------------------------------------------------
 // RUTAS: MENSAJES INTERNOS
 // ------------------------------------------------------------------
 
@@ -393,6 +460,18 @@ app.get('/api/usuarios/lista', (req, res) => {
   const { email } = req.query;
   const usuarios = db.prepare('SELECT nombre, email, rol FROM usuarios WHERE email != ?').all(email);
   res.json(usuarios);
+});
+
+// ------------------------------------------------------------------
+// RUTA: AUTOS VERIFICADOS — debe ir ANTES de /api/autos/:id
+// ------------------------------------------------------------------
+app.get('/api/autos/verificados', (req, res) => {
+  const autos = db.prepare(`
+    SELECT * FROM autos 
+    WHERE verificado = 1 AND estado = 'aprobado'
+    ORDER BY id DESC
+  `).all();
+  res.json(autos.map(autoConFotos));
 });
 
 // ------------------------------------------------------------------
