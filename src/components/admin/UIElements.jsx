@@ -31,35 +31,28 @@ export function ValidationRow({ img, name, info, onAccept, onReject }) {
 }
 
 // --- COMPONENTE: ITEM DE REPORTE ---
-export function ReportItem({ user, status, msg, time, resolved }) {
+export function ReportItem({ user, status, msg, time, resolved, onGestionar }) {
   return (
-    <div
-      className={`space-y-2 border-l-2 pl-4 transition-opacity ${
-        resolved ? "opacity-30 border-white/10" : "border-[#e7b476]"
-      }`}
-    >
+    <div className={`space-y-2 border-l-2 pl-4 transition-opacity ${resolved ? "opacity-30 border-white/10" : "border-[#e7b476]"}`}>
       <div className="flex justify-between items-center">
         <h5 className="text-[10px] font-black uppercase tracking-tight text-white/80">
           Reporte a: {user}
         </h5>
-        <span
-          className={`text-[8px] font-black border px-1.5 py-0.5 rounded ${
-            resolved ? "border-white/10 text-white/40" : "border-[#e7b476] text-[#e7b476]"
-          }`}
-        >
+        <span className={`text-[8px] font-black border px-1.5 py-0.5 rounded ${resolved ? "border-white/10 text-white/40" : "border-[#e7b476] text-[#e7b476]"}`}>
           {status}
         </span>
       </div>
-      <p className="text-xs italic text-white/50 leading-snug font-light">
+      <p className="text-xs italic text-white/50 leading-snug font-light line-clamp-2">
         "{msg}"
       </p>
       <div className="flex justify-between items-center pt-2">
-        <span className="text-[9px] text-white/20 font-bold uppercase tracking-tighter">
-          {time}
-        </span>
-        {!resolved && (
-          <button className="text-[9px] font-black uppercase text-[#e7b476] hover:underline transition-all">
-            Gestionar
+        <span className="text-[9px] text-white/20 font-bold uppercase tracking-tighter">{time}</span>
+        {!resolved && onGestionar && (
+          <button
+            onClick={onGestionar}
+            className="text-[9px] font-black uppercase text-[#e7b476] hover:underline transition-all"
+          >
+            Resolver
           </button>
         )}
       </div>
@@ -72,9 +65,7 @@ export function ActividadItem({ texto, tiempo }) {
   return (
     <div className="flex justify-between items-center gap-4 border-b border-white/5 pb-3 last:border-0 last:pb-0 mb-3 last:mb-0">
       <p className="text-[11px] text-white/40 font-medium leading-tight">{texto}</p>
-      <span className="text-[9px] text-white/10 font-bold whitespace-nowrap uppercase tracking-tighter">
-        {tiempo}
-      </span>
+      <span className="text-[9px] text-white/10 font-bold whitespace-nowrap uppercase tracking-tighter">{tiempo}</span>
     </div>
   );
 }

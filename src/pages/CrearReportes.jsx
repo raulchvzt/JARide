@@ -15,7 +15,6 @@ const CATEGORIAS = [
 export default function CrearReporte() {
   const navigate = useNavigate();
   const emailActual = localStorage.getItem('usuarioEmail') || '';
-  const nombreActual = localStorage.getItem('usuarioNombre') || '';
   const [misReportes, setMisReportes] = useState([]);
 
   const [categoria, setCategoria] = useState('');
@@ -29,7 +28,7 @@ export default function CrearReporte() {
     if (!emailActual) return;
     fetch(`${API}/api/reportes/mis-reportes?email=${emailActual}`)
       .then(r => r.json()).then(setMisReportes).catch(() => {});
-  }, [exito]);
+  }, [emailActual, exito]);
 
   const enviar = async () => {
     if (!emailActual) { navigate('/login'); return; }

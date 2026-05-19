@@ -96,6 +96,40 @@ export default function DetallesCompra() {
             </div>
           )}
 
+          {/* Ubicación del vendedor */}
+          {auto.ubicacion_vendedor && (
+            <div style={{ marginBottom: '40px' }}>
+              <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '16px' }}>Ubicación del vendedor</h2>
+              <div style={{ background: '#111', border: '1px solid #1f1f1f', borderRadius: '16px', overflow: 'hidden' }}>
+                {/* Mapa embed de Google Maps */}
+                <iframe
+                  title="Ubicación del vendedor"
+                  width="100%"
+                  height="280"
+                  style={{ border: 'none', display: 'block', filter: 'grayscale(30%) invert(92%) hue-rotate(180deg)' }}
+                  loading="lazy"
+                  allowFullScreen
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(auto.ubicacion_vendedor)}&output=embed&z=13`}
+                />
+                <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '10px', borderTop: '1px solid #1f1f1f' }}>
+                  <span style={{ fontSize: '16px' }}>📍</span>
+                  <div>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#fff' }}>{auto.ubicacion_vendedor}</div>
+                    <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '2px' }}>Ubicación aproximada del vendedor</div>
+                  </div>
+                  <a
+                    href={`https://maps.google.com/?q=${encodeURIComponent(auto.ubicacion_vendedor)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ marginLeft: 'auto', background: 'none', border: '1px solid #2a2a2a', borderRadius: '8px', padding: '6px 14px', color: '#f1c98a', fontSize: '12px', fontWeight: 600, cursor: 'pointer', textDecoration: 'none' }}
+                  >
+                    Ver en Maps →
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Descripción */}
           <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '16px' }}>Descripción del vehículo</h2>
           <p style={{ fontSize: '14px', color: '#9ca3af', lineHeight: 1.8, marginBottom: '14px' }}>
@@ -192,7 +226,7 @@ export default function DetallesCompra() {
             <div style={{ fontSize: '12px', color: '#9ca3af', lineHeight: 1.6, marginBottom: '12px' }}>
               Opciones de pago disponibles. Consulta con el vendedor para conocer planes y enganches.
             </div>
-            <button onClick={() => navigate('/finanzas')} style={{ background: 'none', border: 'none', color: '#f1c98a', fontSize: '13px', cursor: 'pointer', padding: 0, fontWeight: 500 }}>
+            <button style={{ background: 'none', border: 'none', color: '#f1c98a', fontSize: '13px', cursor: 'pointer', padding: 0, fontWeight: 500 }}>
               Calcular opciones →
             </button>
           </div>

@@ -4,6 +4,94 @@ import { useNavigate } from 'react-router-dom';
 
 const API = import.meta.env.VITE_API_URL;
 
+// ------------------------------------------------------------------
+// COMPONENTE: Mis Publicaciones (solo vendedor/admin)
+// ------------------------------------------------------------------
+function MisPublicaciones({ email, navigate }) {
+  const [autos, setAutos] = React.useState([]);
+  const [cargando, setCargando] = React.useState(true);
+
+  React.useEffect(() => {
+    if (!email) return;
+    fetch(`${API}/api/autos`)
+      .then(r => r.json())
+      .then(data => {
+        const mios = data.filter(a => a.vendedor_email === email);
+        setAutos(mios);
+      })
+      .catch(() => {})
+      .finally(() => setCargando(false));
+  }, [email]);
+
+  const estadoColor = {
+    aprobado:  { color: '#22c55e', bg: '#22c55e15', label: 'Aprobado' },
+    pendiente: { color: '#f59e0b', bg: '#f59e0b15', label: 'Pendiente' },
+    rechazado: { color: '#ef4444', bg: '#ef444415', label: 'Rechazado' },
+  };
+
+  return (
+    <div style={{ background: '#111', border: '1px solid #1f1f1f', borderRadius: '20px', padding: '28px', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div>
+          <h2 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 4px' }}>Mis publicaciones</h2>
+          <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>Autos que has publicado en JARide</p>
+        </div>
+        <button onClick={() => navigate('/vender')}
+          style={{ background: '#f1c98a', border: 'none', borderRadius: '8px', padding: '8px 16px', color: '#000', fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: 'sans-serif' }}>
+          + Publicar auto
+        </button>
+      </div>
+
+      {cargando ? (
+        <p style={{ fontSize: '13px', color: '#6b7280', textAlign: 'center', padding: '20px 0' }}>Cargando...</p>
+      ) : autos.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '32px 0', border: '2px dashed #1f1f1f', borderRadius: '12px' }}>
+          <p style={{ fontSize: '13px', color: '#6b7280', margin: '0 0 16px' }}>No has publicado ningún auto aún</p>
+          <button onClick={() => navigate('/vender')}
+            style={{ background: 'none', border: '1px solid #2a2a2a', borderRadius: '8px', padding: '8px 20px', color: '#9ca3af', fontSize: '12px', cursor: 'pointer', fontFamily: 'sans-serif' }}>
+            Publicar mi primer auto
+          </button>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {autos.map(a => {
+            const s = estadoColor[a.estado] || estadoColor.pendiente;
+            return (
+              <div key={a.id} onClick={() => navigate(`/auto/${a.id}`)}
+                style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '14px 16px', background: '#141414', border: '1px solid #2a2a2a', borderRadius: '12px', cursor: 'pointer', transition: 'border 0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = '#3a3a3a'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = '#2a2a2a'}
+              >
+                {/* Foto */}
+                <div style={{ width: '60px', height: '44px', borderRadius: '8px', overflow: 'hidden', flexShrink: 0, background: '#1a1a1a' }}>
+                  {a.photos?.[0]
+                    ? <img src={a.photos[0]} alt={a.modelo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>🚗</div>
+                  }
+                </div>
+                {/* Info */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '13px', fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {a.marca} {a.modelo}
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '2px' }}>
+                    {a.anio} · {parseInt(a.km).toLocaleString()} km · USD$ {parseInt(a.precio).toLocaleString()}
+                  </div>
+                </div>
+                {/* Estado */}
+                <span style={{ background: s.bg, color: s.color, fontSize: '9px', fontWeight: 700, padding: '3px 10px', borderRadius: '20px', textTransform: 'uppercase', flexShrink: 0 }}>
+                  {s.label}
+                </span>
+                <span style={{ color: '#6b7280', fontSize: '16px', flexShrink: 0 }}>›</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const ESTADO_COLOR = {
   pendiente: { color: '#f59e0b', bg: '#f59e0b15', label: 'Pendiente' },
   urgente:   { color: '#ef4444', bg: '#ef444415', label: 'Urgente' },
@@ -307,6 +395,11 @@ export default function Perfil() {
             </div>
           )}
         </div>
+
+        {/* MIS PUBLICACIONES — solo para vendedores y admin */}
+        {(rol === 'vendedor' || rol === 'admin') && (
+          <MisPublicaciones email={email} navigate={navigate} />
+        )}
 
         {/* Zona peligrosa */}
         <div style={{ background: '#111', border: '1px solid #ef444430', borderRadius: '20px', padding: '28px' }}>

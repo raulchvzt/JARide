@@ -11,13 +11,17 @@ import {
   LuHistory
 } from "react-icons/lu";
 
+const API = import.meta.env.VITE_API_URL;
+
 export default function VistaGeneral() {
   const [pendientes, setPendientes] = useState([]);
   const [stats, setStats] = useState(null);
+  const [reportes, setReportes] = useState([]);
+  const [reporteStats, setReporteStats] = useState(null);
 
   const cargarPendientes = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/autos`);
+      const res = await fetch(`${API}/api/autos`);
       const data = await res.json();
       setPendientes(data.filter(auto => auto.estado === "pendiente"));
     } catch (error) {
@@ -27,7 +31,7 @@ export default function VistaGeneral() {
 
   const cargarStats = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/stats`);
+      const res = await fetch(`${API}/api/admin/stats`);
       const data = await res.json();
       setStats(data);
     } catch (error) {
@@ -35,22 +39,56 @@ export default function VistaGeneral() {
     }
   };
 
+  const cargarReportes = async () => {
+    try {
+      const [rRes, sRes] = await Promise.all([
+        fetch(`${API}/api/admin/reportes`),
+        fetch(`${API}/api/admin/reportes/stats`)
+      ]);
+      const rData = await rRes.json();
+      const sData = await sRes.json();
+      const ordenados = [...rData].sort((a, b) => {
+        if (a.estado === 'resuelto' && b.estado !== 'resuelto') return 1;
+        if (a.estado !== 'resuelto' && b.estado === 'resuelto') return -1;
+        return new Date(b.fecha) - new Date(a.fecha);
+      });
+      setReportes(ordenados.slice(0, 4));
+      setReporteStats(sData);
+    } catch (error) {
+      console.error("Error al cargar reportes:", error);
+    }
+  };
+
   useEffect(() => {
     cargarPendientes();
     cargarStats();
+    cargarReportes();
   }, []);
 
   const manejarDecision = async (id, nuevoEstado) => {
     try {
-      await fetch(`${import.meta.env.VITE_API_URL}/api/admin/revisar-auto`, {
+      await fetch(`${API}/api/admin/revisar-auto`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, nuevoEstado })
       });
       cargarPendientes();
-      cargarStats(); // Refrescar stats también al aprobar/rechazar
+      cargarStats();
     } catch (error) {
       console.error("Error al procesar la revisión:", error);
+    }
+  };
+
+  const resolverReporte = async (id) => {
+    try {
+      await fetch(`${API}/api/admin/reportes/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado: 'resuelto' })
+      });
+      cargarReportes();
+    } catch (error) {
+      console.error("Error al resolver reporte:", error);
     }
   };
 
@@ -58,6 +96,16 @@ export default function VistaGeneral() {
     const fecha = new Date();
     const opciones = { day: "numeric", month: "long", year: "numeric" };
     return fecha.toLocaleDateString("es-ES", opciones).replace(/(^\w|\s\w)/g, m => m.toUpperCase());
+  };
+
+  const formatTiempo = (fecha) => {
+    const diff = Date.now() - new Date(fecha).getTime();
+    const mins = Math.floor(diff / 60000);
+    const hrs  = Math.floor(diff / 3600000);
+    const dias = Math.floor(diff / 86400000);
+    if (mins < 60) return `Hace ${mins} min`;
+    if (hrs  < 24) return `Hace ${hrs} hora${hrs > 1 ? 's' : ''}`;
+    return `Hace ${dias} día${dias > 1 ? 's' : ''}`;
   };
 
   return (
@@ -78,31 +126,10 @@ export default function VistaGeneral() {
 
       {/* ESTADÍSTICAS */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
-        <StatCard
-          title="Autos Publicados"
-          value={stats ? stats.autosAprobados.toLocaleString() : '—'}
-          subtext="en catálogo actualmente"
-          icon={<LuCar />}
-        />
-        <StatCard
-          title="Total de Autos"
-          value={stats ? stats.totalAutos.toLocaleString() : '—'}
-          subtext="registrados en plataforma"
-          icon={<LuTrendingUp />}
-        />
-        <StatCard
-          title="Usuarios Registrados"
-          value={stats ? stats.totalUsuarios.toLocaleString() : '—'}
-          subtext={stats ? `${stats.vendedores} vendedores · ${stats.compradores} compradores` : ''}
-          icon={<LuUsers />}
-        />
-        <StatCard
-          title="Pendientes de Revisión"
-          value={stats ? stats.autosPendientes.toLocaleString() : '—'}
-          alert={stats?.autosPendientes > 0}
-          subtext={stats?.autosPendientes > 0 ? "Requieren atención" : "Todo al día"}
-          icon={<LuCircleAlert />}
-        />
+        <StatCard title="Autos Publicados" value={stats ? stats.autosAprobados.toLocaleString() : '—'} subtext="en catálogo actualmente" icon={<LuCar />} />
+        <StatCard title="Total de Autos" value={stats ? stats.totalAutos.toLocaleString() : '—'} subtext="registrados en plataforma" icon={<LuTrendingUp />} />
+        <StatCard title="Usuarios Registrados" value={stats ? stats.totalUsuarios.toLocaleString() : '—'} subtext={stats ? `${stats.vendedores} vendedores · ${stats.compradores} compradores` : ''} icon={<LuUsers />} />
+        <StatCard title="Pendientes de Revisión" value={stats ? stats.autosPendientes.toLocaleString() : '—'} alert={stats?.autosPendientes > 0} subtext={stats?.autosPendientes > 0 ? "Requieren atención" : "Todo al día"} icon={<LuCircleAlert />} />
       </div>
 
       {/* GRÁFICA */}
@@ -119,7 +146,6 @@ export default function VistaGeneral() {
               {pendientes.length} POR REVISAR
             </span>
           </div>
-
           <div className="space-y-6">
             {pendientes.length > 0 ? (
               pendientes.map((auto) => (
@@ -145,11 +171,24 @@ export default function VistaGeneral() {
           <div className="bg-[#111] rounded-3xl border border-white/5 p-8 shadow-2xl">
             <div className="flex justify-between items-center mb-8">
               <h3 className="text-lg font-medium">Gestión de Reportes</h3>
-              <span className="bg-[#e7b476]/10 text-[#e7b476] text-[9px] px-2 py-0.5 rounded font-black uppercase tracking-widest border border-[#e7b476]/20">3 PENDIENTES</span>
+              <span className="bg-[#e7b476]/10 text-[#e7b476] text-[9px] px-2 py-0.5 rounded font-black uppercase tracking-widest border border-[#e7b476]/20">
+                {reporteStats ? `${reporteStats.pendientes + reporteStats.urgentes} PENDIENTES` : '—'}
+              </span>
             </div>
             <div className="space-y-8">
-              <ReportItem user="Carlos Méndez" status="REVISIÓN" msg="El auto fue entregado con retraso de 2 horas." time="Hace 2 horas" />
-              <ReportItem user="Juan V." status="RESUELTO" msg="Intento de cobro fuera de plataforma." time="Ayer" resolved />
+              {reportes.length === 0 ? (
+                <p className="text-white/20 text-xs font-black uppercase tracking-widest text-center py-4">Sin reportes aún</p>
+              ) : reportes.map(r => (
+                <ReportItem
+                  key={r.id}
+                  user={r.usuario_nombre || r.usuario_email}
+                  status={r.estado === 'resuelto' ? 'RESUELTO' : r.estado === 'urgente' ? 'URGENTE' : 'REVISIÓN'}
+                  msg={r.descripcion}
+                  time={formatTiempo(r.fecha)}
+                  resolved={r.estado === 'resuelto'}
+                  onGestionar={() => resolverReporte(r.id)}
+                />
+              ))}
             </div>
           </div>
 
@@ -164,6 +203,7 @@ export default function VistaGeneral() {
                   <ActividadItem texto={`${stats.totalUsuarios} usuarios registrados en total`} tiempo="hoy" />
                   <ActividadItem texto={`${stats.autosAprobados} autos aprobados en catálogo`} tiempo="hoy" />
                   <ActividadItem texto={`${stats.autosPendientes} autos esperando revisión`} tiempo="hoy" />
+                  {reporteStats && <ActividadItem texto={`${reporteStats.pendientes} reportes pendientes de atención`} tiempo="hoy" />}
                 </>
               )}
             </div>
