@@ -199,7 +199,7 @@ export default function Reportes() {
                   <select
                     value={r.estado}
                     onChange={e => cambiarEstado(r.id, e.target.value)}
-                    className="bg-white/5 border border-white/10 rounded-lg text-[10px] px-3 py-2 text-white/60 outline-none cursor-pointer"
+                    className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-gray-800 text-white transition cursor-pointer"
                   >
                     <option value="pendiente">Pendiente</option>
                     <option value="urgente">Urgente</option>
@@ -209,17 +209,17 @@ export default function Reportes() {
 
                   <button
                     onClick={() => setReporteResponder(r)}
-                    className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-white/5 text-white hover:bg-white/10 transition">
+                    className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-white/5 text-white hover:bg-white/10 transition cursor-pointer">
                     ✉ Responder
                   </button>
                   <button
                     onClick={() => cambiarEstado(r.id, 'resuelto')}
-                    className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-white text-black hover:bg-[#e7b476] transition">
+                    className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-green-400 text-black hover:bg-[#9aec97c2] transition cursor-pointer">
                     ✓ Resolver
                   </button>
                   <button
                     onClick={() => eliminar(r.id)}
-                    className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-red-500/10 text-red-400 hover:bg-red-500/20 transition">
+                    className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-red-500/10 text-red-400 hover:bg-red-500/20 transition cursor-pointer">
                     Eliminar
                   </button>
                 </div>
