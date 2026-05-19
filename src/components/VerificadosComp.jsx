@@ -91,18 +91,8 @@ export default function VerificadosComp() {
         </div>
 
         {/* Botón de Acción Call-to-Action */}
-        <motion.div 
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          className="mt-20 flex justify-center"
-        >
-          <button className="group relative px-12 py-4 bg-transparent border border-white/20 rounded-full overflow-hidden transition-all hover:border-[#e7b476]">
-            <a href="#" className="relative z-10 text-[10px] uppercase tracking-[0.4em] font-bold group-hover:text-black transition-colors">
-              Ver Catálogo Certificado
-            </a>
-            <div className="absolute inset-0 bg-[#e7b476] translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-          </button>
-        </motion.div>
+    
+
       </div>
     </section>
   );

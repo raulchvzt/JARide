@@ -96,7 +96,7 @@ export default function Usuarios() {
                   <td className="px-8 py-5">
                     <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase border ${
                       user.rol === 'admin'
-                        ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+                        ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
                         : user.rol === 'vendedor'
                         ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
                         : 'bg-white/5 text-white/40 border-white/10'

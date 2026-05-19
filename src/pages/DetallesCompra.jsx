@@ -192,7 +192,7 @@ export default function DetallesCompra() {
             <div style={{ fontSize: '12px', color: '#9ca3af', lineHeight: 1.6, marginBottom: '12px' }}>
               Opciones de pago disponibles. Consulta con el vendedor para conocer planes y enganches.
             </div>
-            <button style={{ background: 'none', border: 'none', color: '#f1c98a', fontSize: '13px', cursor: 'pointer', padding: 0, fontWeight: 500 }}>
+            <button onClick={() => navigate('/finanzas')} style={{ background: 'none', border: 'none', color: '#f1c98a', fontSize: '13px', cursor: 'pointer', padding: 0, fontWeight: 500 }}>
               Calcular opciones →
             </button>
           </div>

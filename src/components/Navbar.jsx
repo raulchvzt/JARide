@@ -79,12 +79,17 @@ export default function Navbar() {
                     <div className="h-px bg-white/5 my-1"></div>
                   </>
                 )}
-                  <Link
-                  to="/perfil"
-                  className="w-full text-left block px-4 py-3 text-[10px] text-white/60 hover:text-white hover:bg-white/5 rounded-lg uppercase font-bold tracking-widest transition-all border border-transparent hover:border-b-white cursor-pointer"
-                >
-                  Mi Perfil
-                </Link>
+                  {usuarioRol !== 'admin' && (
+                  <>
+                    <Link
+                      to="/perfil"
+                      className="block px-4 py-3 text-[10px] text-white/60 hover:text-white hover:bg-white/5 rounded-lg uppercase font-bold tracking-widest transition-colors"
+                    >
+                      Mi Perfil
+                    </Link>
+                    <div className="h-px bg-white/5 my-1"></div>
+                  </>
+                )}
                 <button
                   onClick={cerrarSesion}
                   className="w-full text-left block px-4 py-3 text-[10px] text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg uppercase font-bold tracking-widest transition-all border border-transparent hover:border-red-500/30 cursor-pointer"
