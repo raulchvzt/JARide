@@ -45,9 +45,7 @@ export default function Usuarios() {
     <div className="animate-in fade-in duration-500">
       <div className="flex justify-between items-center mb-10">
         <h1 className="text-3xl font-medium tracking-tight">Gestión de Usuarios</h1>
-        <button className="bg-[#e7b476] text-black px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition shadow-lg shadow-[#e7b476]/10 flex items-center gap-2">
-          <LuUserPlus size={14} /> Nuevo Usuario
-        </button>
+
       </div>
 
       <div className="bg-[#111] rounded-2xl border border-white/5 overflow-hidden shadow-2xl">

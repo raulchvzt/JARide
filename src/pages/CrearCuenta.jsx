@@ -88,7 +88,7 @@ export default function CrearCuenta() {
             } catch {
                 setSugerencias([]);
             }
-        }, 600);
+        }, 400);
     };
 
     return (
