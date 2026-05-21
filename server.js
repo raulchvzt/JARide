@@ -204,6 +204,41 @@ app.post('/api/registro', async (req, res) => {
   res.json({ success: true });
 });
 
+
+// RUTA: BÚSQUEDA DE DIRECCIONES CON NOMINATIM (OpenStreetMap)
+app.get('/api/nominatim/search', async (req, res) => {
+  try {
+    const query = req.query.q;
+
+    if (!query) {
+      return res.status(400).json({
+        success: false,
+        message: 'Falta query'
+      });
+    }
+
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&countrycodes=mx&addressdetails=1&limit=6&dedupe=1`;
+
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'JARide/1.0'
+      }
+    });
+
+    const data = await response.json();
+
+    res.json(data);
+
+  } catch (error) {
+    console.error('Error Nominatim:', error);
+
+    res.status(500).json({
+      success: false,
+      message: 'Error buscando direcciones'
+    });
+  }
+});
+
 app.get('/api/admin/pendientes', (req, res) => res.json(db.prepare("SELECT * FROM autos WHERE estado='pendiente'").all().map(autoConFotos)));
 app.post('/api/admin/revisar-auto', (req, res) => { db.prepare("UPDATE autos SET estado=? WHERE id=?").run(req.body.nuevoEstado, req.body.id); res.json({ success: true }); });
 
