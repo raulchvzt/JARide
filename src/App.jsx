@@ -1,48 +1,63 @@
-import { Routes, Route, Navigate } from 'react-router-dom' // Añadimos Navigate aquí
-import Login from './pages/Login'
-import Inicio from './pages/Inicio'
-import VentanaComprar from './pages/VentanaComprar'
-import CrearCuenta from './pages/CrearCuenta'
-import Vender from './pages/Vender'
-import Verificados from './pages/Verificados'
-import AdminDashboard from './pages/admin/AdminDashboard'
-import DetallesCompra from './pages/DetallesCompra'
-import Finanzas from './pages/Finanzas'
-import Perfil from './pages/Perfil'
-import Mensajes from './pages/Mensajes'
-import CrearReporte from './pages/CrearReportes'
+import { Routes, Route, Navigate } from 'react-router-dom';
+import Swal from 'sweetalert2'; // 1. Importamos SweetAlert2
+import Login from './pages/Login';
+import Inicio from './pages/Inicio';
+import VentanaComprar from './pages/VentanaComprar';
+import CrearCuenta from './pages/CrearCuenta';
+import Vender from './pages/Vender';
+import Verificados from './pages/Verificados';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import DetallesCompra from './pages/DetallesCompra';
+import Finanzas from './pages/Finanzas';
+import Perfil from './pages/Perfil';
+import Mensajes from './pages/Mensajes';
+import CrearReporte from './pages/CrearReportes';
 
+// COMPONENTE DE PROTECCIÓN PARA VENDEDORES
+const RutaProtegidaVendedor = ({ children }) => {
+  const rol = localStorage.getItem('usuarioRol');
+  const estaLogueado = localStorage.getItem('estaAutenticado') === 'true';
 
-  // COMPONENTE DE PROTECCIÓN PARA VENDEDORES
-  const RutaProtegidaVendedor = ({ children }) => {
-    const rol = localStorage.getItem('usuarioRol');
-    const estaLogueado = localStorage.getItem('estaAutenticado') === 'true';
+  if (!estaLogueado || (rol !== 'vendedor' && rol !== 'admin')) {
+    // 2. Alerta Premium con diseño oscuro para acceso denegado
+    Swal.fire({
+      title: 'Acceso Denegado',
+      text: 'Esta sección es exclusiva para Vendedores y Administradores.',
+      icon: 'error',
+      background: '#111',
+      color: '#fff',
+      confirmButtonColor: '#f1c98a',
+      confirmButtonText: 'Entendido',
+    });
+    return <Navigate to="/" />;
+  }
+  
+  return children;
+};
 
-    if (!estaLogueado || (rol !== 'vendedor' && rol !== 'admin')) {
-      alert("Acceso denegado. Esta sección es exclusiva para Vendedores y Administradores.");
-      return <Navigate to="/" />;
-    }
-    
-    return children;
-  };
+// COMPONENTE DE PROTECCIÓN PARA ADMIN
+const RutaProtegidaAdmin = ({ children }) => {
+  const rol = localStorage.getItem('usuarioRol');
+  const estaLogueado = localStorage.getItem('estaAutenticado') === 'true';
 
-  // COMPONENTE DE PROTECCIÓN PARA ADMIN
-  const RutaProtegidaAdmin = ({ children }) => {
-    const rol = localStorage.getItem('usuarioRol');
-    const estaLogueado = localStorage.getItem('estaAutenticado') === 'true';
+  if (!estaLogueado || rol !== 'admin') {
+    // 3. Alerta Premium con diseño oscuro para el panel de administración
+    Swal.fire({
+      title: 'Acceso Restringido',
+      text: 'Esta sección es exclusiva para Administradores.',
+      icon: 'error',
+      background: '#111',
+      color: '#fff',
+      confirmButtonColor: '#f1c98a',
+      confirmButtonText: 'Regresar',
+    });
+    return <Navigate to="/" />;
+  }
 
-    if (!estaLogueado || rol !== 'admin') {
-      alert("Acceso denegado. Esta sección es exclusiva para Administradores.");
-      return <Navigate to="/" />;
-    }
-
-    return children;
-  };
+  return children;
+};
 
 function App() {
-
-
-
   return (
     <Routes>
       {/* RUTAS PÚBLICAS */}
@@ -54,9 +69,8 @@ function App() {
       <Route path='/finanzas' element={<Finanzas />} />
       <Route path='/verificados' element={<Verificados />} />
       <Route path='/mensajes' element={<Mensajes />} />
-     <Route path="/perfil" element={<Perfil />} />
-     <Route path="/reportes" element={<CrearReporte />} />
-
+      <Route path="/perfil" element={<Perfil />} />
+      <Route path="/reportes" element={<CrearReporte />} />
 
       {/* RUTAS PROTEGIDAS */}
       <Route 
@@ -79,7 +93,7 @@ function App() {
       {/* Redirección por si escriben una ruta que no existe */}
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
-  )
+  );
 }
 
-export default App
+export default App;

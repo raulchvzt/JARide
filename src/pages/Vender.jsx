@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
 import ImageUploader from '../components/ImageUploader';
 import VenderForm from '../components/VenderForm';
+import AnimacionPagina from '../components/AnimacionPagina';
 
 export default function Vender() {
   const [photos, setPhotos] = useState([]); 
@@ -86,6 +87,7 @@ export default function Vender() {
   };
 
   return (
+     <AnimacionPagina>
     <div className="bg-black min-h-screen text-white pb-20">
       <Navbar />
       
@@ -118,5 +120,6 @@ export default function Vender() {
         </div>
       </main>
     </div>
+     </AnimacionPagina>
   );
 }

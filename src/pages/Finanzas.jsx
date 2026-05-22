@@ -1,12 +1,20 @@
 import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
-
-
-
-
+import AnimacionPagina from '../components/AnimacionPagina';
 
 export default function Finanzas() {
-    const [precioVehiculo, setPrecioVehiculo] = useState(185000);
+    const location = useLocation();
+    
+    // Capturamos el precio del estado de la navegación. 
+    // Si no existe (ej. entran desde el menú), el valor base por defecto será 185000.
+    const precioRecibido = location.state?.precioAuto || 185000;
+
+    const [precioVehiculo, setPrecioVehiculo] = useState(precioRecibido);
+
+    // ESTRATEGIA: Si el usuario cambia de auto en DetallesCompra y vuelve a entrar, 
+    // este useEffect actualiza el simulador con el precio del nuevo carro de inmediato.
+   
 
     const planes = [
         { id: 'normal', nombre: 'Normal', tasa: 8.9, descripcion: 'Sin requisitos adicionales' },
@@ -48,11 +56,8 @@ export default function Finanzas() {
     ];
 
     const manejarSolicitud = () => {
-        // REEMPLAZA ESTO: Pon tu número de WhatsApp con clave de país (ej. 521 para México seguido de tus 10 dígitos)
-        // Ejemplo: "5213312345678"
         const telefonoAsesor = "5213122009437"; 
         
-        // Estructuramos el mensaje usando saltos de línea (%0A) y negritas de WhatsApp (*)
         const mensaje = `¡Hola JARide! Me interesa solicitar el crédito para un vehículo.%0A%0A` +
                         `*DETALLES DE MI COTIZACIÓN:*%0A` +
                         `• *Precio del auto:* ${formatPrecio(precioVehiculo)}%0A` +
@@ -63,27 +68,25 @@ export default function Finanzas() {
                         `• *Total intereses:* ${formatPrecio(totalIntereses)}%0A%0A` +
                         `¿Me podrían indicar cuáles son los siguientes pasos para iniciar el trámite?`;
 
-        // Crea el enlace final de la API oficial de WhatsApp
         const urlWhatsApp = `https://api.whatsapp.com/send?phone=${telefonoAsesor}&text=${mensaje}`;
         
-        // Abre una nueva pestaña en el navegador con el chat listo
         window.open(urlWhatsApp, '_blank');
     };
 
     return (
+         <AnimacionPagina>
         <div style={{ background: '#0a0a0a', minHeight: '100vh', color: '#fff', fontFamily: 'sans-serif', paddingBottom: '100px' }}>
             <Navbar />
 
-            {/* CONTENEDOR PRINCIPAL MODIFICADO */}
+            {/* CONTENEDOR PRINCIPAL */}
             <div style={{
                 display: 'flex', 
                 flexWrap: 'wrap', 
                 gap: '60px',
                 maxWidth: '1200px', 
                 margin: '0 auto', 
-                // SOLUCIÓN: Agregamos 120px arriba para empujar el contenido hacia abajo del Navbar flotante
                 padding: '120px 20px 40px 20px', 
-                alignItems: 'flex-start' // Volvemos a alinear arriba para evitar estiramientos raros
+                alignItems: 'flex-start'
             }}>
 
                 {/* COLUMNA IZQUIERDA */}
@@ -313,5 +316,6 @@ export default function Finanzas() {
 
             </div>
         </div>
+         </AnimacionPagina>
     );
 }

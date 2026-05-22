@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { LuInbox, LuSend, LuPencil, LuTrash2, LuX, LuCheck } from 'react-icons/lu';
+import AnimacionPagina from '../components/AnimacionPagina';
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -60,6 +61,7 @@ function ModalNuevoMensaje({ emailActual, onClose, onEnviado, destinatarioInicia
   const inputStyle = { width: '100%', padding: '10px 14px', background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: '10px', color: '#fff', fontSize: '14px', outline: 'none', boxSizing: 'border-box', fontFamily: 'sans-serif' };
 
   return (
+   
     <div style={{ position: 'fixed', inset: 0, background: '#000000cc', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
       <div style={{ background: '#111', border: '1px solid #2a2a2a', borderRadius: '20px', padding: '32px', width: '100%', maxWidth: '500px', color: '#fff', fontFamily: 'sans-serif' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
@@ -201,6 +203,7 @@ export default function Mensajes() {
   };
 
   return (
+    <AnimacionPagina>
     <div style={{ background: '#0a0a0a', minHeight: '100vh', color: '#fff', fontFamily: 'sans-serif', paddingTop: '56px' }}>
       <Navbar />
 
@@ -298,5 +301,6 @@ export default function Mensajes() {
         />
       )}
     </div>
+    </AnimacionPagina>
   );
 }

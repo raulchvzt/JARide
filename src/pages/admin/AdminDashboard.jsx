@@ -5,6 +5,7 @@ import Usuarios from "./Usuarios";
 import Vehiculos from "./Vehiculos"; // El que hicimos antes
 import Reportes from "./Reportes";
 import Configuracion from "./Configuracion";
+import MensajesAdmin from "./MensajesAdmin";
 
 export default function AdminDashboard() {
   const [vistaActiva, setVistaActiva] = useState("dashboard");
@@ -17,6 +18,7 @@ export default function AdminDashboard() {
         {vistaActiva === "usuarios" && <Usuarios />}
         {vistaActiva === "vehiculos" && <Vehiculos />}
         {vistaActiva === "reportes" && <Reportes />}
+        {vistaActiva === "mensajes" && <MensajesAdmin />}
         {vistaActiva === "config" && <Configuracion />}
       </main>
     </div>

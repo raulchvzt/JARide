@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import { useNavigate } from 'react-router-dom';
+import AnimacionPagina from '../components/AnimacionPagina';
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -30,6 +31,7 @@ function MisPublicaciones({ email, navigate }) {
   };
 
   return (
+    
     <div style={{ background: '#111', border: '1px solid #1f1f1f', borderRadius: '24px', padding: '32px', marginBottom: '24px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
         <div>
@@ -269,6 +271,7 @@ export default function Perfil() {
   );
 
   return (
+     <AnimacionPagina>
     <div style={{ background: '#0a0a0a', minHeight: '100vh', color: '#fff', fontFamily: 'sans-serif', paddingBottom: '80px' }}>
       <Navbar />
 
@@ -479,5 +482,6 @@ export default function Perfil() {
         </div>
       )}
     </div>
+     </AnimacionPagina>
   );
 }

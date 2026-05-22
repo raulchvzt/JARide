@@ -1,17 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import AnimacionPagina from '../components/AnimacionPagina';
 
 // Auto estético de fallback (solo se muestra si no hay datos reales)
-const AUTO_ESTATICO = {
-  marca: "AUDI", modelo: "R8 V10 Performance", precio: "185000", anio: "2021",
-  km: "12500", combustible: "Gasolina", condicion: "Usado", transmision: "Automática",
-  descripcion: "Un ícono del rendimiento y el diseño automotriz. Este Audi R8 V10 Performance ofrece una experiencia de conducción inigualable.",
-  categoria: "Deportivos", vendedor: "Luxury Motors Inc.", estado: "aprobado", verificado: true,
-  photos: ["https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=900&q=80",
-           "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
-           "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=400&q=80"],
-};
+
 
 export default function DetallesCompra() {
   const { id } = useParams();
@@ -22,8 +15,7 @@ export default function DetallesCompra() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!id) { setAuto(AUTO_ESTATICO); setImgActiva(AUTO_ESTATICO.photos[0]); setCargando(false); return; }
-
+  
     fetch(`${import.meta.env.VITE_API_URL}/api/autos/${id}`)
       .then(r => r.json())
       .then(data => {
@@ -38,7 +30,16 @@ export default function DetallesCompra() {
       .finally(() => setCargando(false));
   }, [id]);
 
-  const formatPrecio = (p) => 'USD$ ' + parseInt(p).toLocaleString('en-US');
+  // FUNCIÓN NUEVA: Maneja el envío del precio real hacia la pestaña de Finanzas
+  const manejarIrAFinanzas = () => {
+    navigate('/finanzas', {
+      state: {
+        precioAuto: auto.precio // Enviamos el precio dinámico del auto actual
+      }
+    });
+  };
+
+  const formatPrecio = (p) => '$ ' + parseInt(p).toLocaleString('en-US');
   const formatKm = (k) => parseInt(k).toLocaleString('es-MX') + ' km';
 
   if (cargando) return (
@@ -62,6 +63,7 @@ export default function DetallesCompra() {
   const imagenPrincipal = imgActiva || galeria[0] || 'https://via.placeholder.com/900x400?text=Sin+Foto';
 
   return (
+    <AnimacionPagina>
     <div style={{ background: '#0a0a0a', minHeight: '100vh', color: '#fff', fontFamily: 'sans-serif', paddingTop: '56px' }}>
       <Navbar />
 
@@ -101,7 +103,6 @@ export default function DetallesCompra() {
             <div style={{ marginBottom: '40px' }}>
               <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '16px' }}>Ubicación del vendedor</h2>
               <div style={{ background: '#111', border: '1px solid #1f1f1f', borderRadius: '16px', overflow: 'hidden' }}>
-                {/* Mapa embed de Google Maps */}
                 <iframe
                   title="Ubicación del vendedor"
                   width="100%"
@@ -216,22 +217,25 @@ export default function DetallesCompra() {
             style={{ width: '100%', padding: '14px', background: '#f1c98a', color: '#000', border: 'none', borderRadius: '12px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', marginBottom: '10px' }}>
             Contactar al vendedor
           </button>
-          <button style={{ width: '100%', padding: '14px', background: 'none', color: '#fff', border: '1px solid #2a2a2a', borderRadius: '12px', fontSize: '14px', fontWeight: 500, cursor: 'pointer', marginBottom: '20px' }}>
-            Agendar una inspección en persona
-          </button>
+
 
           {/* Financiamiento */}
           <div style={{ padding: '16px', background: '#141414', border: '1px solid #2a2a2a', borderRadius: '12px' }}>
             <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: '8px' }}>¿Buscas financiamiento?</div>
             <div style={{ fontSize: '12px', color: '#9ca3af', lineHeight: 1.6, marginBottom: '12px' }}>
-              Opciones de pago disponibles. Consulta con el vendedor para conocer planes y enganches.
+              Opciones de pago disponibles. Consulta con el vendedor para conocer planes and enganches.
             </div>
-            <button style={{ background: 'none', border: 'none', color: '#f1c98a', fontSize: '13px', cursor: 'pointer', padding: 0, fontWeight: 500 }}>
+            {/* BOTÓN CORREGIDO: Se añadió la acción onClick vinculada a la nueva función */}
+            <button 
+              onClick={manejarIrAFinanzas}
+              style={{ background: 'none', border: 'none', color: '#f1c98a', fontSize: '13px', cursor: 'pointer', padding: 0, fontWeight: 500 }}
+            >
               Calcular opciones →
             </button>
           </div>
         </div>
       </div>
     </div>
+    </AnimacionPagina>
   );
 }

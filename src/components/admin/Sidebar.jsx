@@ -37,6 +37,7 @@ export default function Sidebar({ setVista, vistaActiva }) {
     { id: "usuarios", label: "Usuarios" },
     { id: "vehiculos", label: "Vehículos" },
     { id: "reportes", label: "Reportes" },
+    { id: "mensajes", label: "Mensajes" },
     { id: "config", label: "Configuración" },
   ];
 
