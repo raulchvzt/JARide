@@ -137,7 +137,7 @@ function DetalleMensaje({ mensaje, tipo, onEliminar, onVolver }) {
 // PÁGINA PRINCIPAL
 // ------------------------------------------------------------------
 export default function Mensajes() {
-  const emailActual = localStorage.getItem('usuarioEmail') || '';
+  const emailActual = sessionStorage.getItem('usuarioEmail') || '';
   const location = useLocation();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const estadoNav = location.state || {};

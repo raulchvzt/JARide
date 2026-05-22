@@ -6,13 +6,13 @@ const API = import.meta.env.VITE_API_URL;
 
 export default function Navbar() {
   const [usuario, setUsuario] = useState(() =>
-    localStorage.getItem("usuarioNombre"),
+    sessionStorage.getItem("usuarioNombre"),
   );
   const [usuarioImagen] = useState(() =>
-    localStorage.getItem("usuarioFoto"),
+    sessionStorage.getItem("usuarioFoto"),
   );
-  const usuarioRol = localStorage.getItem("usuarioRol")?.toLowerCase();
-  const emailActual = localStorage.getItem("usuarioEmail") || "";
+  const usuarioRol = sessionStorage.getItem("usuarioRol")?.toLowerCase();
+  const emailActual = sessionStorage.getItem("usuarioEmail") || "";
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -47,7 +47,7 @@ export default function Navbar() {
   }, [emailActual, location.pathname]);
 
   const cerrarSesion = () => {
-    localStorage.clear();
+    sessionStorage.clear();
     setUsuario(null);
     navigate("/login");
   };

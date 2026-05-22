@@ -140,7 +140,7 @@ export default function Perfil() {
   const fileRef = useRef(null);
 
   useEffect(() => {
-    const emailGuardado = localStorage.getItem('usuarioEmail');
+    const emailGuardado = sessionStorage.getItem('usuarioEmail');
     if (!emailGuardado) { setCargando(false); return; }
 
     fetch(`${API}/api/usuario/perfil?email=${emailGuardado}`)
@@ -185,8 +185,8 @@ export default function Perfil() {
       });
       const data = await res.json();
       if (data.success) {
-        localStorage.setItem('usuarioNombre', nombre);
-        localStorage.setItem('usuarioFoto', foto || '');
+        sessionStorage.setItem('usuarioNombre', nombre);
+        sessionStorage.setItem('usuarioFoto', foto || '');
         setEditando(false);
         setGuardado(true);
         setTimeout(() => setGuardado(false), 3000);
@@ -247,7 +247,7 @@ export default function Perfil() {
       method: 'DELETE', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email })
     });
-    localStorage.clear();
+    sessionStorage.clear();
     window.location.href = '/';
   };
 

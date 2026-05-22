@@ -208,7 +208,7 @@ export default function DetallesCompra() {
           {/* Botones */}
           <button
             onClick={() => {
-              if (!localStorage.getItem('estaAutenticado')) {
+              if (!sessionStorage.getItem('estaAutenticado')) {
                 navigate('/login');
                 return;
               }

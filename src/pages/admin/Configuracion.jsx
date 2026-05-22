@@ -5,9 +5,9 @@ import { LuUser, LuLock, LuDownload, LuArrowLeft, LuCheck, LuUpload } from 'reac
 // SECCIÓN: Perfil del Admin
 // ------------------------------------------------------------------
 function SeccionPerfil({ onVolver }) {
-  const emailAdmin = localStorage.getItem('usuarioEmail') || '';
-  const [nombre, setNombre] = useState(localStorage.getItem('usuarioNombre') || '');
-  const [foto, setFoto] = useState(localStorage.getItem('usuarioFoto') || '');
+  const emailAdmin = sessionStorage.getItem('usuarioEmail') || '';
+  const [nombre, setNombre] = useState(sessionStorage.getItem('usuarioNombre') || '');
+  const [foto, setFoto] = useState(sessionStorage.getItem('usuarioFoto') || '');
   const [cargando, setCargando] = useState(false);
   const [exito, setExito] = useState(false);
 
@@ -31,8 +31,8 @@ function SeccionPerfil({ onVolver }) {
       });
       const data = await res.json();
       if (data.success) {
-        localStorage.setItem('usuarioNombre', nombre);
-        localStorage.setItem('usuarioFoto', foto);
+        sessionStorage.setItem('usuarioNombre', nombre);
+        sessionStorage.setItem('usuarioFoto', foto);
         setExito(true);
         setTimeout(() => setExito(false), 3000);
       }
@@ -99,7 +99,7 @@ function SeccionPerfil({ onVolver }) {
 // SECCIÓN: Cambiar contraseña
 // ------------------------------------------------------------------
 function SeccionPassword({ onVolver }) {
-  const emailAdmin = localStorage.getItem('usuarioEmail') || '';
+  const emailAdmin = sessionStorage.getItem('usuarioEmail') || '';
   const [actual, setActual] = useState('');
   const [nueva, setNueva] = useState('');
   const [confirmar, setConfirmar] = useState('');

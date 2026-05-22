@@ -6,8 +6,8 @@ const API = import.meta.env.VITE_API_URL;
 
 // Modal de contacto
 function ModalContacto({ auto, onClose }) {
-  const emailActual = localStorage.getItem('usuarioEmail') || '';
-  const nombreActual = localStorage.getItem('usuarioNombre') || '';
+  const emailActual = sessionStorage.getItem('usuarioEmail') || '';
+  const nombreActual = sessionStorage.getItem('usuarioNombre') || '';
   const [mensaje, setMensaje] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [exito, setExito] = useState(false);

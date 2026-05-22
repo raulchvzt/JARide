@@ -15,8 +15,8 @@ import CrearReporte from './pages/CrearReportes';
 
 // COMPONENTE DE PROTECCIÓN PARA VENDEDORES
 const RutaProtegidaVendedor = ({ children }) => {
-  const rol = localStorage.getItem('usuarioRol');
-  const estaLogueado = localStorage.getItem('estaAutenticado') === 'true';
+  const rol = sessionStorage.getItem('usuarioRol');
+  const estaLogueado = sessionStorage.getItem('estaAutenticado') === 'true';
 
   if (!estaLogueado || (rol !== 'vendedor' && rol !== 'admin')) {
     // 2. Alerta Premium con diseño oscuro para acceso denegado
@@ -37,8 +37,8 @@ const RutaProtegidaVendedor = ({ children }) => {
 
 // COMPONENTE DE PROTECCIÓN PARA ADMIN
 const RutaProtegidaAdmin = ({ children }) => {
-  const rol = localStorage.getItem('usuarioRol');
-  const estaLogueado = localStorage.getItem('estaAutenticado') === 'true';
+  const rol = sessionStorage.getItem('usuarioRol');
+  const estaLogueado = sessionStorage.getItem('estaAutenticado') === 'true';
 
   if (!estaLogueado || rol !== 'admin') {
     // 3. Alerta Premium con diseño oscuro para el panel de administración

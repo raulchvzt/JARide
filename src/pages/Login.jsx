@@ -31,11 +31,11 @@ function LoginContent() {
   };
 
   const guardarSesion = (data, emailUsado = '') => {
-    localStorage.setItem('usuarioNombre', data.nombre);
-    localStorage.setItem('usuarioFoto', data.foto || '');
-    localStorage.setItem('usuarioRol', data.rol);
-    localStorage.setItem('usuarioEmail', emailUsado || data.email || '');
-    localStorage.setItem('estaAutenticado', 'true');
+    sessionStorage.setItem('usuarioNombre', data.nombre);
+    sessionStorage.setItem('usuarioFoto', data.foto || '');
+    sessionStorage.setItem('usuarioRol', data.rol);
+    sessionStorage.setItem('usuarioEmail', emailUsado || data.email || '');
+    sessionStorage.setItem('estaAutenticado', 'true');
   };
 
   // Login email/password

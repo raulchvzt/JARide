@@ -28,7 +28,7 @@ function EstadoBadge({ estado }) {
 }
 
 function ModalResponder({ reporte, onClose, onEnviado }) {
-  const emailAdmin = localStorage.getItem('usuarioEmail') || '';
+  const emailAdmin = sessionStorage.getItem('usuarioEmail') || '';
   const [mensaje, setMensaje] = useState(`Hola, sobre tu reporte "${reporte.titulo}":\n\n`);
   const [enviando, setEnviando] = useState(false);
   const [exito, setExito] = useState(false);

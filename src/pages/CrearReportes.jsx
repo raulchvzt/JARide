@@ -14,7 +14,7 @@ const CATEGORIAS = [
 
 export default function CrearReporte() {
   const navigate = useNavigate();
-  const emailActual = localStorage.getItem('usuarioEmail') || '';
+  const emailActual = sessionStorage.getItem('usuarioEmail') || '';
   const [misReportes, setMisReportes] = useState([]);
 
   const [categoria, setCategoria] = useState('');

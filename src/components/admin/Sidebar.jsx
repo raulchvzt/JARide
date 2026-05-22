@@ -13,9 +13,9 @@ export default function Sidebar({ setVista, vistaActiva }) {
   });
 
   useEffect(() => {
-    const nombreLocal = localStorage.getItem('usuarioNombre');
-    const rolLocal = localStorage.getItem('usuarioRol');
-    const fotoLocal = localStorage.getItem('usuarioFoto');
+    const nombreLocal = sessionStorage.getItem('usuarioNombre');
+    const rolLocal = sessionStorage.getItem('usuarioRol');
+    const fotoLocal = sessionStorage.getItem('usuarioFoto');
 
     if (nombreLocal) {
       setUsuario({
@@ -28,7 +28,7 @@ export default function Sidebar({ setVista, vistaActiva }) {
 
   // Función para cerrar sesión
   const handleLogout = () => {
-    localStorage.clear(); // Limpia todo (nombre, rol, etc.)
+    sessionStorage.clear(); // Limpia todo (nombre, rol, etc.)
     navigate("/login");   // Te manda de vuelta al login
   };
 
