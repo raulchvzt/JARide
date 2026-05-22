@@ -1,4 +1,12 @@
 require('dotenv').config();
+const cloudinary = require('cloudinary').v2;
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
 const { Resend } = require('resend');
 
 const express = require('express');
@@ -229,9 +237,18 @@ app.get('/api/nominatim/search', async (req, res) => {
 app.get('/api/admin/pendientes', (req, res) => res.json(db.prepare("SELECT * FROM autos WHERE estado='pendiente'").all().map(autoConFotos)));
 app.post('/api/admin/revisar-auto', (req, res) => { db.prepare("UPDATE autos SET estado=? WHERE id=?").run(req.body.nuevoEstado, req.body.id); res.json({ success: true }); });
 
-app.post('/api/subir-foto', upload.single('foto'), (req, res) => {
+app.post('/api/subir-foto', upload.single('foto'), async (req, res) => {
   if (!req.file) return res.status(400).json({ success: false, message: 'No se subió ninguna imagen' });
-  res.json({ success: true, url: `${API_URL}/uploads/${req.file.filename}` });
+  try {
+    const resultado = await cloudinary.uploader.upload(req.file.path, {
+      folder: 'jaride',
+    });
+    fs.unlinkSync(req.file.path); // borra el archivo temporal
+    res.json({ success: true, url: resultado.secure_url });
+  } catch (err) {
+    console.error('Error Cloudinary:', err);
+    res.status(500).json({ success: false, message: 'Error al subir la imagen' });
+  }
 });
 
 app.get('/api/autos', (req, res) => res.json(db.prepare('SELECT * FROM autos').all().map(autoConFotos)));
