@@ -7,22 +7,26 @@ const GOOGLE_CLIENT_ID = '1032892362121-71ep1vasopum4jiqi0lm2k5o0ngftpcr.apps.go
 function LoginContent() {
   const videoUrl = bmwlogin;
 
-  // Estados login normal
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // Estados toast
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastOk, setToastOk] = useState(true);
 
-  // Estados 2FA
   const [pantalla2FA, setPantalla2FA] = useState(false);
   const [emailPendiente, setEmailPendiente] = useState('');
   const [codigo2FA, setCodigo2FA] = useState('');
   const [error2FA, setError2FA] = useState('');
 
-  // ----------------------------------------------------------------
+  const [modalRecuperar, setModalRecuperar] = useState(false);
+  const [pasoRecuperar, setPasoRecuperar] = useState(1);
+  const [emailRecuperar, setEmailRecuperar] = useState('');
+  const [codigoRecuperar, setCodigoRecuperar] = useState('');
+  const [nuevaPass, setNuevaPass] = useState('');
+  const [errorRecuperar, setErrorRecuperar] = useState('');
+  const [loadingRecuperar, setLoadingRecuperar] = useState(false);
+
   const mostrarToast = (msg, ok = true) => {
     setToastMessage(msg);
     setToastOk(ok);
@@ -38,7 +42,6 @@ function LoginContent() {
     sessionStorage.setItem('estaAutenticado', 'true');
   };
 
-  // Login email/password
   const manejarLogin = async (e) => {
     e.preventDefault();
     try {
@@ -48,7 +51,6 @@ function LoginContent() {
         body: JSON.stringify({ email, password })
       });
       const data = await res.json();
-
       if (data.success && data.requiere2FA) {
         setEmailPendiente(email);
         setPantalla2FA(true);
@@ -66,7 +68,6 @@ function LoginContent() {
     }
   };
 
-  // Login Google
   const manejarGoogleLogin = async (credentialResponse) => {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/login/google`, {
@@ -87,7 +88,6 @@ function LoginContent() {
     }
   };
 
-  // Verificar código 2FA
   const verificar2FA = async () => {
     setError2FA('');
     try {
@@ -111,9 +111,45 @@ function LoginContent() {
     }
   };
 
-  // ----------------------------------------------------------------
+  const enviarCodigoRecuperar = async () => {
+    setLoadingRecuperar(true);
+    setErrorRecuperar('');
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/password/recuperar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailRecuperar })
+      });
+      const data = await res.json();
+      if (data.success) setPasoRecuperar(2);
+      else setErrorRecuperar(data.message);
+    } catch { setErrorRecuperar('Error de conexión'); }
+    setLoadingRecuperar(false);
+  };
+
+  const resetearPassword = async () => {
+    setLoadingRecuperar(true);
+    setErrorRecuperar('');
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/password/reset`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailRecuperar, codigo: codigoRecuperar, nuevaPassword: nuevaPass })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setModalRecuperar(false);
+        setPasoRecuperar(1);
+        setEmailRecuperar('');
+        setCodigoRecuperar('');
+        setNuevaPass('');
+        mostrarToast('¡Contraseña actualizada con éxito! 🎉', true);
+      } else setErrorRecuperar(data.message);
+    } catch { setErrorRecuperar('Error de conexión'); }
+    setLoadingRecuperar(false);
+  };
+
   // PANTALLA 2FA
-  // ----------------------------------------------------------------
   if (pantalla2FA) {
     return (
       <div className="h-screen w-full flex items-center justify-center bg-[#0a0a0a]">
@@ -123,30 +159,20 @@ function LoginContent() {
           <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '28px', lineHeight: 1.6 }}>
             Enviamos un código a <strong style={{ color: '#f1c98a' }}>{emailPendiente}</strong>. Revisa tu correo e ingrésalo abajo.
           </p>
-
           <label style={{ fontSize: '11px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: '8px' }}>Código de 6 dígitos</label>
           <input
-            type="text"
-            maxLength={6}
-            value={codigo2FA}
+            type="text" maxLength={6} value={codigo2FA}
             onChange={e => setCodigo2FA(e.target.value.replace(/[^0-9]/g, ''))}
             placeholder="000000"
             style={{ width: '100%', padding: '16px', background: '#1a1a1a', border: '1px solid #f1c98a', borderRadius: '12px', color: '#fff', fontSize: '28px', fontWeight: 800, letterSpacing: '10px', textAlign: 'center', outline: 'none', boxSizing: 'border-box', marginBottom: '16px' }}
           />
-
           {error2FA && <p style={{ color: '#ef4444', fontSize: '12px', marginBottom: '12px' }}>{error2FA}</p>}
-
-          <button
-            onClick={verificar2FA}
-            disabled={codigo2FA.length !== 6}
-            style={{ width: '100%', padding: '14px', background: codigo2FA.length === 6 ? '#f1c98a' : '#1a1a1a', border: 'none', borderRadius: '12px', color: codigo2FA.length === 6 ? '#000' : '#6b7280', fontSize: '15px', fontWeight: 700, cursor: codigo2FA.length === 6 ? 'pointer' : 'default', marginBottom: '12px' }}
-          >
+          <button onClick={verificar2FA} disabled={codigo2FA.length !== 6}
+            style={{ width: '100%', padding: '14px', background: codigo2FA.length === 6 ? '#f1c98a' : '#1a1a1a', border: 'none', borderRadius: '12px', color: codigo2FA.length === 6 ? '#000' : '#6b7280', fontSize: '15px', fontWeight: 700, cursor: codigo2FA.length === 6 ? 'pointer' : 'default', marginBottom: '12px' }}>
             Verificar e ingresar
           </button>
-          <button
-            onClick={() => { setPantalla2FA(false); setCodigo2FA(''); setError2FA(''); }}
-            style={{ width: '100%', padding: '12px', background: 'none', border: '1px solid #2a2a2a', borderRadius: '12px', color: '#9ca3af', fontSize: '13px', cursor: 'pointer' }}
-          >
+          <button onClick={() => { setPantalla2FA(false); setCodigo2FA(''); setError2FA(''); }}
+            style={{ width: '100%', padding: '12px', background: 'none', border: '1px solid #2a2a2a', borderRadius: '12px', color: '#9ca3af', fontSize: '13px', cursor: 'pointer' }}>
             Volver al login
           </button>
         </div>
@@ -154,9 +180,7 @@ function LoginContent() {
     );
   }
 
-  // ----------------------------------------------------------------
   // PANTALLA LOGIN NORMAL
-  // ----------------------------------------------------------------
   return (
     <div className="h-screen w-full grid grid-cols-1 md:grid-cols-2 bg-black text-white font-sans overflow-hidden">
 
@@ -227,7 +251,10 @@ function LoginContent() {
             <div className="space-y-1">
               <div className="flex items-center justify-between ml-1">
                 <label className="text-xs font-medium text-gray-400 uppercase tracking-wider">Contraseña</label>
-                <a href="#" className="text-[10px] text-[#f1c98a] hover:underline">¿Olvidaste tu contraseña?</a>
+                <button type="button" onClick={() => { setModalRecuperar(true); setPasoRecuperar(1); setErrorRecuperar(''); setEmailRecuperar(''); }}
+                  className="text-[10px] text-[#f1c98a] hover:underline">
+                  ¿Olvidaste tu contraseña?
+                </button>
               </div>
               <input
                 type="password" required value={password} onChange={e => setPassword(e.target.value)}
@@ -257,6 +284,52 @@ function LoginContent() {
           </div>
         </div>
       </div>
+
+      {/* MODAL RECUPERAR CONTRASEÑA */}
+      {modalRecuperar && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+          <div className="bg-[#111] border border-[#2a2a2a] rounded-2xl p-8 w-full max-w-md">
+            <h2 className="text-xl font-bold text-white mb-1">Recuperar contraseña</h2>
+            <p className="text-gray-500 text-sm mb-6">
+              {pasoRecuperar === 1
+                ? 'Ingresa tu correo y te enviaremos un código.'
+                : `Ingresa el código enviado a ${emailRecuperar} y tu nueva contraseña.`}
+            </p>
+
+            {pasoRecuperar === 1 ? (
+              <>
+                <input type="email" placeholder="tu@correo.com" value={emailRecuperar}
+                  onChange={e => setEmailRecuperar(e.target.value)}
+                  className="w-full p-3 bg-[#1a1a1a] border border-gray-800 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-[#f1c98a] text-sm mb-4" />
+                {errorRecuperar && <p className="text-red-400 text-xs mb-3">{errorRecuperar}</p>}
+                <button onClick={enviarCodigoRecuperar} disabled={loadingRecuperar || !emailRecuperar}
+                  className="w-full p-3 bg-[#f1c98a] text-black font-bold rounded-xl mb-3 disabled:opacity-50">
+                  {loadingRecuperar ? 'Enviando...' : 'Enviar código'}
+                </button>
+              </>
+            ) : (
+              <>
+                <input type="text" placeholder="Código de 6 dígitos" maxLength={6} value={codigoRecuperar}
+                  onChange={e => setCodigoRecuperar(e.target.value.replace(/[^0-9]/g, ''))}
+                  className="w-full p-3 bg-[#1a1a1a] border border-gray-800 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-[#f1c98a] text-sm mb-3 text-center tracking-widest text-lg" />
+                <input type="password" placeholder="Nueva contraseña" value={nuevaPass}
+                  onChange={e => setNuevaPass(e.target.value)}
+                  className="w-full p-3 bg-[#1a1a1a] border border-gray-800 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-[#f1c98a] text-sm mb-4" />
+                {errorRecuperar && <p className="text-red-400 text-xs mb-3">{errorRecuperar}</p>}
+                <button onClick={resetearPassword} disabled={loadingRecuperar || codigoRecuperar.length !== 6 || !nuevaPass}
+                  className="w-full p-3 bg-[#f1c98a] text-black font-bold rounded-xl mb-3 disabled:opacity-50">
+                  {loadingRecuperar ? 'Actualizando...' : 'Cambiar contraseña'}
+                </button>
+              </>
+            )}
+
+            <button onClick={() => setModalRecuperar(false)}
+              className="w-full p-3 bg-transparent border border-gray-800 text-gray-400 rounded-xl text-sm">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* TOAST */}
       {showToast && (
