@@ -1,5 +1,5 @@
 require('dotenv').config();
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
 const express = require('express');
 const cors = require('cors');
@@ -20,24 +20,8 @@ const API_URL   = process.env.API_URL   || 'http://localhost:5000';
 const GOOGLE_ID = process.env.GOOGLE_CLIENT_ID || '1032892362121-71ep1vasopum4jiqi0lm2k5o0ngftpcr.apps.googleusercontent.com';
 
 const googleClient = new OAuth2Client(GOOGLE_ID);
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-// ------------------------------------------------------------------
-// NODEMAILER — Transporter de Gmail
-// ------------------------------------------------------------------
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false
-  }
-});
-
-// Mapa temporal en memoria: email -> { codigo, expira }
 const codigosTemp = new Map();
 
 function generarCodigo() {
@@ -46,11 +30,11 @@ function generarCodigo() {
 
 async function enviarCodigo(email, nombre) {
   const codigo = generarCodigo();
-  const expira = Date.now() + 10 * 60 * 1000; // 10 minutos
+  const expira = Date.now() + 10 * 60 * 1000;
   codigosTemp.set(email, { codigo, expira });
 
-  await transporter.sendMail({
-    from: `"JARide" <${process.env.EMAIL_USER}>`,
+  await resend.emails.send({
+    from: 'JARide <onboarding@resend.dev>',
     to: email,
     subject: 'Tu código de verificación JARide',
     html: `
@@ -67,6 +51,30 @@ async function enviarCodigo(email, nombre) {
   });
   return codigo;
 }
+
+async function enviarCodigoRecuperacion(email, nombre) {
+  const codigo = generarCodigo();
+  const expira = Date.now() + 10 * 60 * 1000;
+  codigosTemp.set(`reset_${email}`, { codigo, expira });
+
+  await resend.emails.send({
+    from: 'JARide <onboarding@resend.dev>',
+    to: email,
+    subject: 'Recuperación de contraseña JARide',
+    html: `
+      <div style="background:#0a0a0a;padding:40px;font-family:sans-serif;color:#fff;max-width:480px;margin:0 auto;border-radius:16px">
+        <h1 style="color:#f1c98a;font-size:28px;margin:0 0 8px">JARide</h1>
+        <p style="color:#9ca3af;margin:0 0 32px">Recuperación de contraseña</p>
+        <p style="margin:0 0 16px">Hola <strong>${nombre}</strong>, tu código para restablecer tu contraseña es:</p>
+        <div style="background:#1a1a1a;border:1px solid #f1c98a30;border-radius:12px;padding:24px;text-align:center;margin:0 0 24px">
+          <span style="font-size:40px;font-weight:800;letter-spacing:12px;color:#f1c98a">${codigo}</span>
+        </div>
+        <p style="color:#6b7280;font-size:13px;margin:0">Este código expira en <strong>10 minutos</strong>. Si no solicitaste esto, ignora este correo.</p>
+      </div>
+    `
+  });
+}
+
 const db = new Database(DB_PATH);
 db.pragma('journal_mode = WAL');
 
@@ -151,7 +159,6 @@ function autoConFotos(auto) {
   return { ...auto, verificado: auto.verificado===1, photos: fotos.map(f=>f.url) };
 }
 
-// LOGIN email/password con bcrypt + migración automática de contraseñas planas
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   const user = db.prepare('SELECT * FROM usuarios WHERE email = ?').get(email);
@@ -165,12 +172,10 @@ app.post('/api/login', async (req, res) => {
       ok = true;
       const hash = await bcrypt.hash(password, 10);
       db.prepare('UPDATE usuarios SET password = ? WHERE id = ?').run(hash, user.id);
-      console.log(`🔒 Contraseña de ${email} migrada a bcrypt`);
     }
   }
   if (!ok) return res.status(401).json({ success: false, message: 'Correo o contraseña incorrectos' });
 
-  // Si tiene 2FA, no devolver sesión todavía — pedir código primero
   if (user.dos_pasos === 1) {
     try { await enviarCodigo(email, user.nombre); } catch (_) {}
     return res.json({ success: true, requiere2FA: true });
@@ -179,7 +184,6 @@ app.post('/api/login', async (req, res) => {
   res.json({ success: true, nombre: user.nombre, foto: user.fotoPerfil, rol: user.rol });
 });
 
-// LOGIN con Google
 app.post('/api/login/google', async (req, res) => {
   const { credential } = req.body;
   try {
@@ -199,7 +203,6 @@ app.post('/api/login/google', async (req, res) => {
   }
 });
 
-// REGISTRO con bcrypt
 app.post('/api/registro', async (req, res) => {
   const { nombre, email, password, rol, telefono, direccion, fotoPerfil } = req.body;
   if (db.prepare('SELECT id FROM usuarios WHERE email = ?').get(email))
@@ -209,38 +212,17 @@ app.post('/api/registro', async (req, res) => {
   res.json({ success: true });
 });
 
-
-// RUTA: BÚSQUEDA DE DIRECCIONES CON NOMINATIM (OpenStreetMap)
 app.get('/api/nominatim/search', async (req, res) => {
   try {
     const query = req.query.q;
-
-    if (!query) {
-      return res.status(400).json({
-        success: false,
-        message: 'Falta query'
-      });
-    }
-
+    if (!query) return res.status(400).json({ success: false, message: 'Falta query' });
     const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&countrycodes=mx&addressdetails=1&limit=6&dedupe=1`;
-
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'JARide/1.0'
-      }
-    });
-
+    const response = await fetch(url, { headers: { 'User-Agent': 'JARide/1.0' } });
     const data = await response.json();
-
     res.json(data);
-
   } catch (error) {
     console.error('Error Nominatim:', error);
-
-    res.status(500).json({
-      success: false,
-      message: 'Error buscando direcciones'
-    });
+    res.status(500).json({ success: false, message: 'Error buscando direcciones' });
   }
 });
 
@@ -301,65 +283,32 @@ app.get('/api/admin/stats', (req, res) => res.json({
   vendedores:      db.prepare("SELECT COUNT(*) as t FROM usuarios WHERE rol='vendedor'").get().t,
 }));
 
-// ------------------------------------------------------------------
-// RUTAS: GRÁFICAS DEL DASHBOARD
-// ------------------------------------------------------------------
-
-// Agregar fecha_registro si no existe
 try { db.exec(`ALTER TABLE usuarios ADD COLUMN fecha_registro TEXT DEFAULT (date('now'))`); } catch (_) {}
 try { db.exec(`ALTER TABLE autos ADD COLUMN fecha_publicacion TEXT DEFAULT (date('now'))`); } catch (_) {}
 
-// Gráfica 1: Autos por categoría
 app.get('/api/admin/graficas/categorias', (req, res) => {
-  const data = db.prepare(`
-    SELECT categoria as name, COUNT(*) as total
-    FROM autos WHERE estado = 'aprobado' AND categoria IS NOT NULL AND categoria != ''
-    GROUP BY categoria ORDER BY total DESC
-  `).all();
+  const data = db.prepare(`SELECT categoria as name, COUNT(*) as total FROM autos WHERE estado = 'aprobado' AND categoria IS NOT NULL AND categoria != '' GROUP BY categoria ORDER BY total DESC`).all();
   res.json(data);
 });
 
-// Gráfica 2: Autos por marca (top 6)
 app.get('/api/admin/graficas/marcas', (req, res) => {
-  const data = db.prepare(`
-    SELECT marca as name, COUNT(*) as total
-    FROM autos WHERE marca IS NOT NULL AND marca != ''
-    GROUP BY marca ORDER BY total DESC LIMIT 6
-  `).all();
+  const data = db.prepare(`SELECT marca as name, COUNT(*) as total FROM autos WHERE marca IS NOT NULL AND marca != '' GROUP BY marca ORDER BY total DESC LIMIT 6`).all();
   res.json(data);
 });
 
-// Gráfica 3: Nuevos usuarios por día (últimos 30 días)
 app.get('/api/admin/graficas/usuarios-mes', (req, res) => {
-  // Generar los últimos 30 días
   const dias = [];
   for (let i = 29; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
     dias.push(d.toISOString().split('T')[0]);
   }
-
-  const registros = db.prepare(`
-    SELECT fecha_registro as fecha, COUNT(*) as total
-    FROM usuarios
-    WHERE fecha_registro >= date('now', '-30 days')
-    GROUP BY fecha_registro
-  `).all();
-
+  const registros = db.prepare(`SELECT fecha_registro as fecha, COUNT(*) as total FROM usuarios WHERE fecha_registro >= date('now', '-30 days') GROUP BY fecha_registro`).all();
   const mapaRegistros = {};
   for (const r of registros) mapaRegistros[r.fecha] = r.total;
-
-  const data = dias.map(fecha => ({
-    name: fecha.slice(5), // Solo MM-DD
-    total: mapaRegistros[fecha] || 0
-  }));
-
+  const data = dias.map(fecha => ({ name: fecha.slice(5), total: mapaRegistros[fecha] || 0 }));
   res.json(data);
 });
-
-// ------------------------------------------------------------------
-// RUTAS: REPORTES
-// ------------------------------------------------------------------
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS reportes (
@@ -373,48 +322,33 @@ db.exec(`
   );
 `);
 
-// Crear reporte
 app.post('/api/reportes', (req, res) => {
   const { usuario_email, titulo, descripcion, categoria } = req.body;
-  if (!usuario_email || !titulo || !descripcion)
-    return res.status(400).json({ success: false, message: 'Faltan campos' });
-  db.prepare(`INSERT INTO reportes (usuario_email, titulo, descripcion, categoria) VALUES (?, ?, ?, ?)`)
-    .run(usuario_email, titulo, descripcion, categoria || 'general');
+  if (!usuario_email || !titulo || !descripcion) return res.status(400).json({ success: false, message: 'Faltan campos' });
+  db.prepare(`INSERT INTO reportes (usuario_email, titulo, descripcion, categoria) VALUES (?, ?, ?, ?)`).run(usuario_email, titulo, descripcion, categoria || 'general');
   res.json({ success: true });
 });
 
-// Obtener todos los reportes (admin)
 app.get('/api/admin/reportes', (req, res) => {
-  const reportes = db.prepare(`
-    SELECT r.*, u.nombre as usuario_nombre, u.fotoPerfil as usuario_foto, u.rol as usuario_rol
-    FROM reportes r
-    LEFT JOIN usuarios u ON u.email = r.usuario_email
-    ORDER BY r.fecha DESC
-  `).all();
+  const reportes = db.prepare(`SELECT r.*, u.nombre as usuario_nombre, u.fotoPerfil as usuario_foto, u.rol as usuario_rol FROM reportes r LEFT JOIN usuarios u ON u.email = r.usuario_email ORDER BY r.fecha DESC`).all();
   res.json(reportes);
 });
 
-// Obtener reportes del usuario
 app.get('/api/reportes/mis-reportes', (req, res) => {
   const { email } = req.query;
-  const reportes = db.prepare('SELECT * FROM reportes WHERE usuario_email = ? ORDER BY fecha DESC').all(email);
-  res.json(reportes);
+  res.json(db.prepare('SELECT * FROM reportes WHERE usuario_email = ? ORDER BY fecha DESC').all(email));
 });
 
-// Cambiar estado del reporte
 app.patch('/api/admin/reportes/:id', (req, res) => {
-  const { estado } = req.body;
-  db.prepare('UPDATE reportes SET estado = ? WHERE id = ?').run(estado, req.params.id);
+  db.prepare('UPDATE reportes SET estado = ? WHERE id = ?').run(req.body.estado, req.params.id);
   res.json({ success: true });
 });
 
-// Eliminar reporte
 app.delete('/api/admin/reportes/:id', (req, res) => {
   db.prepare('DELETE FROM reportes WHERE id = ?').run(req.params.id);
   res.json({ success: true });
 });
 
-// Stats de reportes para dashboard
 app.get('/api/admin/reportes/stats', (req, res) => {
   res.json({
     total:      db.prepare("SELECT COUNT(*) as t FROM reportes").get().t,
@@ -423,10 +357,6 @@ app.get('/api/admin/reportes/stats', (req, res) => {
     resueltos:  db.prepare("SELECT COUNT(*) as t FROM reportes WHERE estado = 'resuelto'").get().t,
   });
 });
-
-// ------------------------------------------------------------------
-// RUTAS: MENSAJES INTERNOS
-// ------------------------------------------------------------------
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS mensajes (
@@ -440,96 +370,55 @@ db.exec(`
   );
 `);
 
-// Enviar mensaje
 app.post('/api/mensajes', (req, res) => {
   const { de_email, para_email, asunto, cuerpo } = req.body;
-  if (!de_email || !para_email || !asunto || !cuerpo)
-    return res.status(400).json({ success: false, message: 'Faltan campos' });
-  db.prepare(`INSERT INTO mensajes (de_email, para_email, asunto, cuerpo) VALUES (?, ?, ?, ?)`)
-    .run(de_email, para_email, asunto, cuerpo);
+  if (!de_email || !para_email || !asunto || !cuerpo) return res.status(400).json({ success: false, message: 'Faltan campos' });
+  db.prepare(`INSERT INTO mensajes (de_email, para_email, asunto, cuerpo) VALUES (?, ?, ?, ?)`).run(de_email, para_email, asunto, cuerpo);
   res.json({ success: true });
 });
 
-// Obtener bandeja de entrada (mensajes recibidos)
 app.get('/api/mensajes/recibidos', (req, res) => {
   const { email } = req.query;
-  const mensajes = db.prepare(`
-    SELECT m.*, u.nombre as de_nombre, u.fotoPerfil as de_foto, u.rol as de_rol
-    FROM mensajes m
-    LEFT JOIN usuarios u ON u.email = m.de_email
-    WHERE m.para_email = ?
-    ORDER BY m.fecha DESC
-  `).all(email);
-  res.json(mensajes);
+  res.json(db.prepare(`SELECT m.*, u.nombre as de_nombre, u.fotoPerfil as de_foto, u.rol as de_rol FROM mensajes m LEFT JOIN usuarios u ON u.email = m.de_email WHERE m.para_email = ? ORDER BY m.fecha DESC`).all(email));
 });
 
-// Obtener mensajes enviados
 app.get('/api/mensajes/enviados', (req, res) => {
   const { email } = req.query;
-  const mensajes = db.prepare(`
-    SELECT m.*, u.nombre as para_nombre, u.fotoPerfil as para_foto, u.rol as para_rol
-    FROM mensajes m
-    LEFT JOIN usuarios u ON u.email = m.para_email
-    WHERE m.de_email = ?
-    ORDER BY m.fecha DESC
-  `).all(email);
-  res.json(mensajes);
+  res.json(db.prepare(`SELECT m.*, u.nombre as para_nombre, u.fotoPerfil as para_foto, u.rol as para_rol FROM mensajes m LEFT JOIN usuarios u ON u.email = m.para_email WHERE m.de_email = ? ORDER BY m.fecha DESC`).all(email));
 });
 
-// Marcar mensaje como leído
 app.patch('/api/mensajes/:id/leer', (req, res) => {
   db.prepare('UPDATE mensajes SET leido = 1 WHERE id = ?').run(req.params.id);
   res.json({ success: true });
 });
 
-// Eliminar mensaje
 app.delete('/api/mensajes/:id', (req, res) => {
   db.prepare('DELETE FROM mensajes WHERE id = ?').run(req.params.id);
   res.json({ success: true });
 });
 
-// Contar mensajes no leídos
 app.get('/api/mensajes/no-leidos', (req, res) => {
   const { email } = req.query;
   const total = db.prepare('SELECT COUNT(*) as t FROM mensajes WHERE para_email = ? AND leido = 0').get(email).t;
   res.json({ total });
 });
 
-// Obtener todos los usuarios (para selector de destinatario)
 app.get('/api/usuarios/lista', (req, res) => {
   const { email } = req.query;
-  const usuarios = db.prepare('SELECT nombre, email, rol FROM usuarios WHERE email != ?').all(email);
-  res.json(usuarios);
+  res.json(db.prepare('SELECT nombre, email, rol FROM usuarios WHERE email != ?').all(email));
 });
 
-// ------------------------------------------------------------------
-// RUTA: AUTOS VERIFICADOS — debe ir ANTES de /api/autos/:id
-// ------------------------------------------------------------------
 app.get('/api/autos/verificados', (req, res) => {
-  const autos = db.prepare(`
-    SELECT * FROM autos 
-    WHERE verificado = 1 AND estado = 'aprobado'
-    ORDER BY id DESC
-  `).all();
-  res.json(autos.map(autoConFotos));
+  res.json(db.prepare(`SELECT * FROM autos WHERE verificado = 1 AND estado = 'aprobado' ORDER BY id DESC`).all().map(autoConFotos));
 });
 
-// ------------------------------------------------------------------
-// RUTA: DETALLE DE UN AUTO
-// ------------------------------------------------------------------
 app.get('/api/autos/:id', (req, res) => {
   const auto = db.prepare('SELECT * FROM autos WHERE id = ?').get(req.params.id);
   if (!auto) return res.status(404).json({ success: false, message: 'Auto no encontrado' });
-  // Traer ubicación del vendedor
   const vendedor = db.prepare('SELECT direccion FROM usuarios WHERE email = ?').get(auto.vendedor_email);
   res.json({ success: true, ...autoConFotos(auto), ubicacion_vendedor: vendedor?.direccion || null });
 });
 
-// ------------------------------------------------------------------
-// RUTAS: PERFIL DE USUARIO
-// ------------------------------------------------------------------
-
-// Obtener datos del usuario por email
 app.get('/api/usuario/perfil', (req, res) => {
   const { email } = req.query;
   const user = db.prepare('SELECT id, nombre, email, rol, telefono, direccion, fotoPerfil FROM usuarios WHERE email = ?').get(email);
@@ -537,41 +426,30 @@ app.get('/api/usuario/perfil', (req, res) => {
   res.json({ success: true, ...user });
 });
 
-// Actualizar perfil del usuario
 app.patch('/api/usuario/perfil', (req, res) => {
   const { email, nombre, telefono, direccion, fotoPerfil } = req.body;
-  db.prepare('UPDATE usuarios SET nombre = ?, telefono = ?, direccion = ?, fotoPerfil = ? WHERE email = ?')
-    .run(nombre, telefono, direccion, fotoPerfil, email);
+  db.prepare('UPDATE usuarios SET nombre = ?, telefono = ?, direccion = ?, fotoPerfil = ? WHERE email = ?').run(nombre, telefono, direccion, fotoPerfil, email);
   res.json({ success: true });
 });
 
-// Cambiar contraseña del usuario
 app.patch('/api/usuario/password', async (req, res) => {
   const { email, passwordActual, passwordNuevo } = req.body;
   const user = db.prepare('SELECT * FROM usuarios WHERE email = ?').get(email);
   if (!user) return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
-  const esHash = user.password.startsWith('');
+  const esHash = user.password.startsWith('$2');
   const ok = esHash ? await bcrypt.compare(passwordActual, user.password) : user.password === passwordActual;
   if (!ok) return res.status(401).json({ success: false, message: 'Contraseña actual incorrecta' });
   db.prepare('UPDATE usuarios SET password = ? WHERE email = ?').run(await bcrypt.hash(passwordNuevo, 10), email);
   res.json({ success: true });
 });
 
-// Eliminar cuenta del usuario
 app.delete('/api/usuario/cuenta', (req, res) => {
-  const { email } = req.body;
-  db.prepare('DELETE FROM usuarios WHERE email = ?').run(email);
+  db.prepare('DELETE FROM usuarios WHERE email = ?').run(req.body.email);
   res.json({ success: true });
 });
 
-// ------------------------------------------------------------------
-// RUTAS: VERIFICACIÓN EN DOS PASOS (2FA)
-// ------------------------------------------------------------------
-
-// Agregar columna 2FA si no existe
 try { db.exec(`ALTER TABLE usuarios ADD COLUMN dos_pasos INTEGER DEFAULT 0`); } catch (_) {}
 
-// Enviar código para ACTIVAR 2FA
 app.post('/api/usuario/2fa/enviar', async (req, res) => {
   const { email } = req.body;
   const user = db.prepare('SELECT * FROM usuarios WHERE email = ?').get(email);
@@ -585,7 +463,6 @@ app.post('/api/usuario/2fa/enviar', async (req, res) => {
   }
 });
 
-// Verificar código y activar/desactivar 2FA
 app.post('/api/usuario/2fa/verificar', (req, res) => {
   const { email, codigo, activar } = req.body;
   const entrada = codigosTemp.get(email);
@@ -600,7 +477,6 @@ app.post('/api/usuario/2fa/verificar', (req, res) => {
   res.json({ success: true });
 });
 
-// Obtener estado 2FA del usuario
 app.get('/api/usuario/2fa/estado', (req, res) => {
   const { email } = req.query;
   const user = db.prepare('SELECT dos_pasos FROM usuarios WHERE email = ?').get(email);
@@ -608,7 +484,6 @@ app.get('/api/usuario/2fa/estado', (req, res) => {
   res.json({ success: true, activado: user.dos_pasos === 1 });
 });
 
-// Enviar código al hacer LOGIN si tiene 2FA activo
 app.post('/api/login/2fa', async (req, res) => {
   const { email } = req.body;
   const user = db.prepare('SELECT * FROM usuarios WHERE email = ?').get(email);
@@ -621,34 +496,18 @@ app.post('/api/login/2fa', async (req, res) => {
   }
 });
 
-// Enviar correo de recuperación de contraseña
+// Recuperar contraseña
 app.post('/api/password/recuperar', async (req, res) => {
   const { email } = req.body;
   const user = db.prepare('SELECT * FROM usuarios WHERE email = ?').get(email);
   if (!user) return res.status(404).json({ success: false, message: 'No existe una cuenta con ese correo' });
-
-  const codigo = generarCodigo();
-  const expira = Date.now() + 10 * 60 * 1000;
-  codigosTemp.set(`reset_${email}`, { codigo, expira });
-
-  await transporter.sendMail({
-    from: `"JARide" <${process.env.EMAIL_USER}>`,
-    to: email,
-    subject: 'Recuperación de contraseña JARide',
-    html: `
-      <div style="background:#0a0a0a;padding:40px;font-family:sans-serif;color:#fff;max-width:480px;margin:0 auto;border-radius:16px">
-        <h1 style="color:#f1c98a;font-size:28px;margin:0 0 8px">JARide</h1>
-        <p style="color:#9ca3af;margin:0 0 32px">Recuperación de contraseña</p>
-        <p>Hola <strong>${user.nombre}</strong>, tu código para restablecer tu contraseña es:</p>
-        <div style="background:#1a1a1a;border:1px solid #f1c98a30;border-radius:12px;padding:24px;text-align:center;margin:0 0 24px">
-          <span style="font-size:40px;font-weight:800;letter-spacing:12px;color:#f1c98a">${codigo}</span>
-        </div>
-        <p style="color:#6b7280;font-size:13px">Este código expira en <strong>10 minutos</strong>. Si no solicitaste esto, ignora este correo.</p>
-      </div>
-    `
-  });
-
-  res.json({ success: true });
+  try {
+    await enviarCodigoRecuperacion(email, user.nombre);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error enviando correo recuperación:', err);
+    res.status(500).json({ success: false, message: 'Error al enviar el correo' });
+  }
 });
 
 // Verificar código y cambiar contraseña
