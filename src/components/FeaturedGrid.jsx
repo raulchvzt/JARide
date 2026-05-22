@@ -1,4 +1,8 @@
 import React, { useRef, useEffect } from 'react';
+import porscheW from '../assets/porscheW.jpg';
+import audiq3 from '../assets/audiq3.jpg';
+import ca from '../assets/ca.jpg';
+import lambovideo from '../assets/Lamborghini Aventador SVJ Terrorizing Miami _ 4K.mp4';
 
 // Modificamos el componente Card para que soporte video
 const Card = ({ title, sub, img, video, span = "", desc = "" }) => {
@@ -55,17 +59,17 @@ export default function FeaturedGrid() {
         <Card 
             title="Porsche GT3 RS" 
             sub="Selección Premium" 
-            img="/src/assets/porscheW.jpg" 
+            img={porscheW}
         />
         <Card 
             title="Audi Q3" 
             sub="Innovación" 
-            img="/src/assets/audiq3.jpg" 
+            img={audiq3} 
         />
         <Card 
             title="SUVs Seleccionadas" 
             sub="Versatilidad" 
-            img="/src/assets/ca.jpg" 
+            img={ca} 
             span="md:row-span-2" 
             desc="Rendimiento y uso diario. Una selección de SUVs para Colima." 
         />
@@ -73,7 +77,7 @@ export default function FeaturedGrid() {
         <Card 
             title="Publica tu auto con mejor presencia" 
             sub="Vendedores" 
-            video="/src/assets/Lamborghini Aventador SVJ Terrorizing Miami _ 4K.mp4" 
+            video={lambovideo} 
             span="md:col-span-2" 
             desc="JARide combina la estética editorial para presentar tu auto de manera exclusiva." 
         />

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
+import bmwlogin from '../assets/BMW M4 GT4 – Born to Race 🏁 _ Ultimate Cinematic Edit in 4K.mp4';
 
 const GOOGLE_CLIENT_ID = '1032892362121-71ep1vasopum4jiqi0lm2k5o0ngftpcr.apps.googleusercontent.com';
 
 function LoginContent() {
-  const videoUrl = "/src/assets/BMW M4 GT4 – Born to Race 🏁 _ Ultimate Cinematic Edit in 4K.mp4";
+  const videoUrl = bmwlogin;
 
   // Estados login normal
   const [email, setEmail] = useState('');

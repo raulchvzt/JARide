@@ -1,10 +1,11 @@
 import React from 'react';
+import heroBg from '../assets/herolambo.jpg';
 
 export default function Hero() {
   return (
     <section className="relative h-screen w-full bg-black flex flex-col items-center justify-center text-center pt-20 px-6">
       <div className="absolute inset-0 opacity-40">
-        <img src="/src/assets/herolambo.jpg" className="w-full h-full object-cover" alt="Background" />
+        <img src={heroBg} className="w-full h-full object-cover" alt="Background" />
       </div>
       <div className="relative z-10 max-w-6xl">
         <h1 className="text-6xl md:text-[120px] font-extralight text-white leading-[0.85] tracking-tighter mb-8">
