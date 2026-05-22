@@ -616,5 +616,51 @@ app.post('/api/login/2fa', async (req, res) => {
   }
 });
 
+// Enviar correo de recuperación de contraseña
+app.post('/api/password/recuperar', async (req, res) => {
+  const { email } = req.body;
+  const user = db.prepare('SELECT * FROM usuarios WHERE email = ?').get(email);
+  if (!user) return res.status(404).json({ success: false, message: 'No existe una cuenta con ese correo' });
+
+  const codigo = generarCodigo();
+  const expira = Date.now() + 10 * 60 * 1000;
+  codigosTemp.set(`reset_${email}`, { codigo, expira });
+
+  await transporter.sendMail({
+    from: `"JARide" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: 'Recuperación de contraseña JARide',
+    html: `
+      <div style="background:#0a0a0a;padding:40px;font-family:sans-serif;color:#fff;max-width:480px;margin:0 auto;border-radius:16px">
+        <h1 style="color:#f1c98a;font-size:28px;margin:0 0 8px">JARide</h1>
+        <p style="color:#9ca3af;margin:0 0 32px">Recuperación de contraseña</p>
+        <p>Hola <strong>${user.nombre}</strong>, tu código para restablecer tu contraseña es:</p>
+        <div style="background:#1a1a1a;border:1px solid #f1c98a30;border-radius:12px;padding:24px;text-align:center;margin:0 0 24px">
+          <span style="font-size:40px;font-weight:800;letter-spacing:12px;color:#f1c98a">${codigo}</span>
+        </div>
+        <p style="color:#6b7280;font-size:13px">Este código expira en <strong>10 minutos</strong>. Si no solicitaste esto, ignora este correo.</p>
+      </div>
+    `
+  });
+
+  res.json({ success: true });
+});
+
+// Verificar código y cambiar contraseña
+app.post('/api/password/reset', async (req, res) => {
+  const { email, codigo, nuevaPassword } = req.body;
+  const entrada = codigosTemp.get(`reset_${email}`);
+  if (!entrada) return res.status(400).json({ success: false, message: 'No hay código pendiente' });
+  if (Date.now() > entrada.expira) {
+    codigosTemp.delete(`reset_${email}`);
+    return res.status(400).json({ success: false, message: 'El código expiró' });
+  }
+  if (entrada.codigo !== codigo) return res.status(400).json({ success: false, message: 'Código incorrecto' });
+  codigosTemp.delete(`reset_${email}`);
+  const hash = await bcrypt.hash(nuevaPassword, 10);
+  db.prepare('UPDATE usuarios SET password = ? WHERE email = ?').run(hash, email);
+  res.json({ success: true });
+});
+
 app.get('/', (req, res) => res.send('🚀 Servidor JARide con SQLite funcionando'));
 app.listen(PORT, () => console.log(`🚀 Servidor listo en puerto ${PORT}`));
