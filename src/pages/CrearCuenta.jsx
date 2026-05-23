@@ -1,9 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import bmwlogin from '../assets/BMW M4 GT4 – Born to Race 🏁 _ Ultimate Cinematic Edit in 4K.mp4';
+
 
 export default function CrearCuenta() {
     const navigate = useNavigate();
-    const videoUrl = "/src/assets/BMW M4 GT4 – Born to Race 🏁 _ Ultimate Cinematic Edit in 4K.mp4";
+    const videoUrl = bmwlogin;
 
     const options = [
         { id: "vendedor", label: "Vendedor", icon: "🚗" },

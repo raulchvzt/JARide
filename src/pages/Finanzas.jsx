@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import AnimacionPagina from '../components/AnimacionPagina';
@@ -6,15 +6,20 @@ import AnimacionPagina from '../components/AnimacionPagina';
 export default function Finanzas() {
     const location = useLocation();
     
-    // Capturamos el precio del estado de la navegación. 
-    // Si no existe (ej. entran desde el menú), el valor base por defecto será 185000.
+    // Capturamos el precio del estado de la navegación.
     const precioRecibido = location.state?.precioAuto || 185000;
 
+    // Mantenemos el valor numérico real para los cálculos matemáticos
     const [precioVehiculo, setPrecioVehiculo] = useState(precioRecibido);
+    
+    // Nuevo estado para controlar la visualización del texto con comas en el input
+    const [precioInput, setPrecioInput] = useState(precioRecibido.toLocaleString('en-US'));
 
-    // ESTRATEGIA: Si el usuario cambia de auto en DetallesCompra y vuelve a entrar, 
-    // este useEffect actualiza el simulador con el precio del nuevo carro de inmediato.
-   
+    // ESTRATEGIA: Si el usuario cambia de auto y el precio recibido muta, actualizamos ambos estados
+    useEffect(() => {
+        setPrecioVehiculo(precioRecibido);
+        setPrecioInput(precioRecibido.toLocaleString('en-US'));
+    }, [precioRecibido]);
 
     const planes = [
         { id: 'normal', nombre: 'Normal', tasa: 8.9, descripcion: 'Sin requisitos adicionales' },
@@ -46,6 +51,26 @@ export default function Finanzas() {
     const totalIntereses = Math.max(0, totalPagar - precioVehiculo);
 
     const formatPrecio = (p) => 'MX$ ' + p.toLocaleString('en-MX');
+
+    // Función encargada de limpiar las comas para el cálculo y agregarlas para la vista
+    const manejarCambioPrecio = (valorTexto) => {
+        // 1. Quitamos todo lo que no sea un número (elimina comas, letras, etc.)
+        const valorLimpio = valorTexto.replace(/\D/g, '');
+        
+        if (valorLimpio === '') {
+            setPrecioInput('');
+            setPrecioVehiculo(0);
+            return;
+        }
+
+        const numeroNum = Number(valorLimpio);
+        
+        // 2. Guardamos el número limpio para las operaciones matemáticas
+        setPrecioVehiculo(numeroNum);
+        
+        // 3. Guardamos la versión con comas para que se renderice en el input
+        setPrecioInput(numeroNum.toLocaleString('en-US'));
+    };
 
     const requisitos = [
         'Identificación oficial vigente (INE o Pasaporte)',
@@ -157,9 +182,9 @@ export default function Finanzas() {
                         <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
                             <span style={{ position: 'absolute', left: '16px', color: '#f1c98a', fontWeight: 700, fontSize: '18px' }}>$</span>
                             <input
-                                type="number"
-                                value={precioVehiculo}
-                                onChange={e => setPrecioVehiculo(Math.max(0, Number(e.target.value)))}
+                                type="text"
+                                value={precioInput}
+                                onChange={e => manejarCambioPrecio(e.target.value)}
                                 style={{
                                     width: '100%',
                                     background: '#0a0a0a',
