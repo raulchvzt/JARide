@@ -118,7 +118,7 @@ export default function Navbar() {
                               className="w-7 h-7 rounded-full object-cover shrink-0 border border-white/10"
                             />
                           ) : (
-                            <div className="w-7 h-7 bg-[#f1c98a] text-black text-[10px] font-black rounded-full flex items-center justify-center flex-shrink-0">
+                            <div className="w-7 h-7 bg-[#f1c98a] text-black text-[10px] font-black rounded-full flex items-center justify-center shrink-0">
                               {notif.de_nombre?.charAt(0).toUpperCase() || "U"}
                             </div>
                           )}

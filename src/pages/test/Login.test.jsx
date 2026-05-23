@@ -60,8 +60,8 @@ describe("Login", () => {
 
     await waitFor(() => {
       expect(screen.getByText(/sesión iniciada con éxito/i)).toBeInTheDocument();
-      expect(localStorage.getItem("estaAutenticado")).toBe("true");
-      expect(localStorage.getItem("usuarioNombre")).toBe("Juan");
+      expect(sessionStorage.getItem("estaAutenticado")).toBe("true");
+      expect(sessionStorage.getItem("usuarioNombre")).toBe("Juan");
     });
   });
 

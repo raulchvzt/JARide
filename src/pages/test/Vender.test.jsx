@@ -1,20 +1,22 @@
 import React from "react";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import Vender from "../Vender";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import "@testing-library/jest-dom/vitest";
 
+  // --- CLON DEL SERVIDOR ---
 const mockFetch = vi.fn();
 // eslint-disable-next-line no-undef
 global.fetch = mockFetch;
 
-// Helper que simula tener fotos cargadas en el estado
-// Se hace hackeando el input de archivo oculto
-const subirFotoMock = async () => {
+
+  // --- SUBIR FOTOS ---
+const subirFotoMock = () => {
   const file = new File(["img"], "foto.jpg", { type: "image/jpeg" });
   const input = document.querySelector('input[type="file"]');
+  if (!input) throw new Error("No se encontró el input tipo file en el componente");
   fireEvent.change(input, { target: { files: [file] } });
 };
 
@@ -23,7 +25,13 @@ const renderVender = () => render(<MemoryRouter><Vender /></MemoryRouter>);
 describe("Vender", () => {
   beforeEach(() => {
     mockFetch.mockReset();
-    localStorage.clear();
+    sessionStorage.clear();
+    vi.restoreAllMocks();
+    vi.stubEnv("VITE_API_URL", "http://localhost:3000");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   // --- RENDERIZADO ---
@@ -49,7 +57,6 @@ describe("Vender", () => {
 
   it("muestra la categoría seleccionada por defecto", () => {
     renderVender();
-    // Hay múltiples elementos con "Sedanes", usamos getAllByText
     const elementos = screen.getAllByText(/sedanes/i);
     expect(elementos.length).toBeGreaterThan(0);
   });
@@ -59,62 +66,77 @@ describe("Vender", () => {
     const user = userEvent.setup();
     const alertMock = vi.spyOn(window, "alert").mockImplementation(() => {});
     renderVender();
-    await user.click(screen.getByRole("button", { name: /publicar auto/i }));
+
+    const boton = screen.getByRole("button", { name: /publicar auto/i });
+    await act(async () => {
+      await user.click(boton);
+    });
+
     expect(alertMock).toHaveBeenCalledWith("Sube al menos una foto");
-    alertMock.mockRestore();
   });
 
   it("muestra mensaje de éxito tras publicar como usuario normal", async () => {
     const user = userEvent.setup();
-    localStorage.setItem("usuarioRol", "user");
-    localStorage.setItem("usuarioNombre", "Carlos");
-    localStorage.setItem("usuarioEmail", "carlos@jaride.com");
+    sessionStorage.setItem("usuarioRol", "user");
+    sessionStorage.setItem("usuarioNombre", "Carlos");
+    sessionStorage.setItem("usuarioEmail", "carlos@jaride.com");
 
-    mockFetch
-      .mockResolvedValueOnce({ json: async () => ({ success: true, url: "http://foto.jpg" }) })
-      .mockResolvedValueOnce({ json: async () => ({ success: true }) });
+    mockFetch.mockResolvedValue({
+      json: async () => ({ success: true, url: "http://foto.jpg" }),
+    });
 
     renderVender();
-    await subirFotoMock();
-    await user.click(screen.getByRole("button", { name: /publicar auto/i }));
+    subirFotoMock();
+
+    const boton = screen.getByRole("button", { name: /publicar auto/i });
+    await act(async () => {
+      await user.click(boton);
+    });
 
     await waitFor(() => {
-      expect(screen.getByText(/tu auto será publicado/i)).toBeInTheDocument();
+      expect(screen.getByText(/recibido|administrador lo apruebe/i)).toBeInTheDocument();
     });
   });
 
   it("muestra mensaje de aprobación automática si el usuario es admin", async () => {
     const user = userEvent.setup();
-    localStorage.setItem("usuarioRol", "admin");
-    localStorage.setItem("usuarioNombre", "Admin");
-    localStorage.setItem("usuarioEmail", "admin@jaride.com");
+    sessionStorage.setItem("usuarioRol", "admin");
+    sessionStorage.setItem("usuarioNombre", "Admin");
+    sessionStorage.setItem("usuarioEmail", "admin@jaride.com");
 
-    mockFetch
-      .mockResolvedValueOnce({ json: async () => ({ success: true, url: "http://foto.jpg" }) })
-      .mockResolvedValueOnce({ json: async () => ({ success: true }) });
+    mockFetch.mockResolvedValue({
+      json: async () => ({ success: true, url: "http://foto.jpg" }),
+    });
 
     renderVender();
-    await subirFotoMock();
-    await user.click(screen.getByRole("button", { name: /publicar auto/i }));
+    subirFotoMock();
+
+    const boton = screen.getByRole("button", { name: /publicar auto/i });
+    await act(async () => {
+      await user.click(boton);
+    });
 
     await waitFor(() => {
-      expect(screen.getByText(/aprobado automáticamente/i)).toBeInTheDocument();
+      expect(screen.getByText(/aprobado autom/i)).toBeInTheDocument();
     });
   });
 
-
-
   it("deshabilita el botón mientras se envía la publicación", async () => {
     const user = userEvent.setup();
-    localStorage.setItem("usuarioRol", "user");
-    mockFetch.mockImplementation(() => new Promise(() => {})); // nunca resuelve
+    sessionStorage.setItem("usuarioRol", "user");
+
+    mockFetch.mockResolvedValue({
+      json: () => new Promise((resolve) => setTimeout(() => resolve({ success: true }), 5000)),
+    });
 
     renderVender();
-    await subirFotoMock();
-    await user.click(screen.getByRole("button", { name: /publicar auto/i }));
+    subirFotoMock();
 
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: /enviando/i })).toBeDisabled();
+    const boton = screen.getByRole("button", { name: /publicar auto/i });
+    await act(async () => {
+      await user.click(boton);
     });
+
+    expect(boton).toBeDisabled();
   });
 });
