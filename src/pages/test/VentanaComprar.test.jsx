@@ -53,7 +53,7 @@ describe("VentanaComprar", () => {
     mockFetch.mockResolvedValue({ json: async () => autosMock });
   });
 
-  // --- RENDERIZADO (Corregidos con async/await y waitFor) ---
+  // --- RENDERIZADO  ---
   it("muestra el título principal", async () => {
     renderComprar();
     await waitFor(() => {

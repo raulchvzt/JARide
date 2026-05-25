@@ -166,15 +166,26 @@ export default function Perfil() {
       .finally(() => setCargandoReportes(false));
   }, []);
 
-  const handleFoto = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const formData = new FormData();
-    formData.append('foto', file);
-    const res = await fetch(`${API}/api/subir-foto`, { method: 'POST', body: formData });
-    const data = await res.json();
-    if (data.success) setFoto(data.url);
-  };
+const handleFoto = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append('foto', file);
+  const res = await fetch(`${API}/api/subir-foto`, { method: 'POST', body: formData });
+  const data = await res.json();
+
+  if (data.success) {
+    setFoto(data.url);
+    // Guardar inmediatamente en la BD
+    await fetch(`${API}/api/usuario/perfil`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, nombre, telefono, direccion: ubicacion, fotoPerfil: data.url })
+    });
+    sessionStorage.setItem('usuarioFoto', data.url);
+  }
+};
 
   const handleGuardar = async () => {
     try {

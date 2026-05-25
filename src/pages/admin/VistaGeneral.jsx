@@ -133,9 +133,10 @@ export default function VistaGeneral() {
       </div>
 
       {/* GRÁFICA */}
-      <div className="mb-10 bg-[#111] rounded-3xl border border-white/5 p-8 shadow-2xl overflow-hidden">
-        <DashboardChart />
-      </div>
+      {/* GRÁFICA */}
+<div className="mb-10 bg-[#111] rounded-3xl border border-white/5 p-8 shadow-2xl">
+  <DashboardChart />
+</div>
 
       {/* GRID INFERIOR */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">

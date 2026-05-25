@@ -196,12 +196,20 @@ export default function DetallesCompra() {
 
           {/* Vendedor */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px', background: '#141414', borderRadius: '12px', border: '1px solid #2a2a2a', marginBottom: '16px' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f1c98a30', border: '1px solid #f1c98a60', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 700, color: '#f1c98a', flexShrink: 0 }}>
-              {auto.vendedor?.charAt(0).toUpperCase()}
-            </div>
+            {auto.vendedor_foto ? (
+              <img
+                src={auto.vendedor_foto}
+                alt={auto.vendedor}
+                style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #f1c98a60', flexShrink: 0 }}
+              />
+            ) : (
+              <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f1c98a30', border: '1px solid #f1c98a60', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 700, color: '#f1c98a', flexShrink: 0 }}>
+                {auto.vendedor?.charAt(0).toUpperCase()}
+              </div>
+            )}
             <div>
               <div style={{ fontSize: '14px', fontWeight: 600 }}>{auto.vendedor}</div>
-              <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '2px' }}>✓ Vendedor en JARide</div>
+              <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>✓ Vendedor en JARide</div>
             </div>
           </div>
 

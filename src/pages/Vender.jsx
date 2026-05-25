@@ -48,13 +48,17 @@ export default function Vender() {
         }
       }
 
+
       // GUARDAR DATOS FINALES CON ESTADO DEPENDIENDO DEL ROL
+      const precioLimpio = formData.precio.replace(/,/g, '');
       const rolUsuario = sessionStorage.getItem('usuarioRol');
       const autoFinal = { 
         ...formData, 
         photos: urlsSubidas, 
         vendedor: sessionStorage.getItem('usuarioNombre') || 'Vendedor JARide',
         vendedor_email: sessionStorage.getItem('usuarioEmail') || '',
+        precio: precioLimpio,
+        km: formData.km.replace(/,/g, ''),
         estado: rolUsuario === 'admin' ? "aprobado" : "pendiente", // Admin sube aprobado automáticamente
         verificado: rolUsuario === 'admin' // Agregar campo verificado si es admin
       };

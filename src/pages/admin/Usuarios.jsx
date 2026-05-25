@@ -80,8 +80,8 @@ export default function Usuarios() {
                   <td className="px-8 py-5">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center font-bold text-xs overflow-hidden">
-                        {user.fotoPerfil
-                          ? <img src={user.fotoPerfil} alt={user.nombre} className="w-full h-full object-cover" />
+                        {user.fotoperfil
+                          ? <img src={user.fotoperfil} alt={user.nombre} className="w-full h-full object-cover" />
                           : user.nombre.charAt(0).toUpperCase()
                         }
                       </div>
