@@ -103,7 +103,7 @@ const PrecioInput = ({ value, onChange }) => {
 
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-white/40 text-[10px] uppercase font-bold">Precio (USD$)</label>
+      <label className="text-white/40 text-[10px] uppercase font-bold">Precio ($)</label>
       <div className="relative">
         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 text-sm">$</span>
         <input
