@@ -152,7 +152,11 @@ const upload = multer({ storage });
 
 async function autoConFotos(auto) {
   const fotos = await pool.query('SELECT url FROM fotos_autos WHERE auto_id = $1', [auto.id]);
-  return { ...auto, verificado: auto.verificado === 1 || auto.verificado === true, photos: fotos.rows.map(f => f.url) };
+  return {
+    ...auto,  
+    verificado: auto.verificado === 1 || auto.verificado === true,
+    photos: fotos.rows.map(f => f.url)
+  };
 }
 
 // LOGIN
@@ -251,7 +255,11 @@ app.post('/api/subir-foto', upload.single('foto'), async (req, res) => {
 
 // AUTOS
 app.get('/api/autos', async (req, res) => {
-  const { rows } = await pool.query('SELECT * FROM autos');
+  const { rows } = await pool.query(`
+    SELECT a.*, u.fotoperfil as vendedor_foto
+    FROM autos a
+    LEFT JOIN usuarios u ON u.email = a.vendedor_email
+  `);
   res.json(await Promise.all(rows.map(autoConFotos)));
 });
 
@@ -274,8 +282,12 @@ app.get('/api/autos/verificados', async (req, res) => {
 });
 
 app.get('/api/autos/:id', async (req, res) => {
-  const { rows } = await pool.query('SELECT * FROM autos WHERE id = $1', [req.params.id]);
-  const auto = rows[0];
+const { rows } = await pool.query(`
+  SELECT a.*, u.fotoperfil as vendedor_foto
+  FROM autos a
+  LEFT JOIN usuarios u ON u.email = a.vendedor_email
+  WHERE a.id = $1
+`, [req.params.id]);  const auto = rows[0];
   if (!auto) return res.status(404).json({ success: false, message: 'Auto no encontrado' });
   const { rows: vRows } = await pool.query('SELECT direccion FROM usuarios WHERE email = $1', [auto.vendedor_email]);
   res.json({ success: true, ...await autoConFotos(auto), ubicacion_vendedor: vRows[0]?.direccion || null });
@@ -283,9 +295,12 @@ app.get('/api/autos/:id', async (req, res) => {
 
 // ADMIN USUARIOS
 app.get('/api/admin/usuarios', async (req, res) => {
-  const { rows } = await pool.query('SELECT id,nombre,email,rol,telefono,fotoPerfil FROM usuarios');
+  const { rows } = await pool.query(
+    'SELECT id, nombre, email, rol, telefono, fotoperfil as "fotoPerfil" FROM usuarios'
+  );
   res.json(rows);
 });
+
 app.delete('/api/admin/usuarios/:id', async (req, res) => {
   await pool.query('DELETE FROM usuarios WHERE id=$1', [req.params.id]);
   res.json({ success: true });
@@ -293,8 +308,11 @@ app.delete('/api/admin/usuarios/:id', async (req, res) => {
 
 // ADMIN VEHICULOS
 app.get('/api/admin/vehiculos', async (req, res) => {
-  const { rows } = await pool.query('SELECT * FROM autos');
-  res.json(await Promise.all(rows.map(autoConFotos)));
+const { rows } = await pool.query(`
+  SELECT a.*, u.fotoperfil as vendedor_foto
+  FROM autos a
+  LEFT JOIN usuarios u ON u.email = a.vendedor_email
+`);  res.json(await Promise.all(rows.map(autoConFotos)));
 });
 app.delete('/api/admin/vehiculos/:id', async (req, res) => {
   await pool.query('DELETE FROM autos WHERE id=$1', [req.params.id]);
@@ -356,17 +374,48 @@ app.get('/api/admin/graficas/marcas', async (req, res) => {
   const { rows } = await pool.query(`SELECT marca as name, COUNT(*) as total FROM autos WHERE marca IS NOT NULL AND marca != '' GROUP BY marca ORDER BY total DESC LIMIT 6`);
   res.json(rows);
 });
+
+app.get('/api/admin/graficas/modelos', async (req, res) => {
+  const { rows } = await pool.query(`
+    SELECT modelo as name, COUNT(*) as total 
+    FROM autos 
+    WHERE modelo IS NOT NULL AND modelo != '' 
+    GROUP BY modelo 
+    ORDER BY total DESC
+  `);
+  res.json(rows);
+});
+
+// FIX: esta consulta no funcionaba porque fecha_registro es TEXT, hay que castear a DATE para comparar
+
 app.get('/api/admin/graficas/usuarios-mes', async (req, res) => {
-  const dias = [];
-  for (let i = 29; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    dias.push(d.toISOString().split('T')[0]);
+  try {
+    const dias = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      dias.push(d.toISOString().split('T')[0]);
+    }
+
+    // FIX: castear fecha_registro a DATE para poder comparar
+    const { rows } = await pool.query(`
+      SELECT fecha_registro as fecha, COUNT(*) as total
+      FROM usuarios
+      WHERE fecha_registro::DATE >= CURRENT_DATE - INTERVAL '30 days'
+      GROUP BY fecha_registro
+    `);
+
+    const mapa = {};
+    for (const r of rows) mapa[r.fecha] = Number(r.total);
+
+    res.json(dias.map(fecha => ({
+      name: fecha.slice(5),
+      total: mapa[fecha] || 0
+    })));
+  } catch (err) {
+    console.error('Error en /graficas/usuarios-mes:', err);
+    res.status(500).json({ error: err.message });
   }
-  const { rows } = await pool.query(`SELECT fecha_registro as fecha, COUNT(*) as total FROM usuarios WHERE fecha_registro >= CURRENT_DATE - INTERVAL '30 days' GROUP BY fecha_registro`);
-  const mapa = {};
-  for (const r of rows) mapa[r.fecha] = r.total;
-  res.json(dias.map(fecha => ({ name: fecha.slice(5), total: mapa[fecha] || 0 })));
 });
 
 // REPORTES
@@ -516,6 +565,8 @@ app.post('/api/password/reset', async (req, res) => {
   await pool.query('UPDATE usuarios SET password=$1 WHERE email=$2', [await bcrypt.hash(nuevaPassword, 10), email]);
   res.json({ success: true });
 });
+
+
 
 app.get('/', (req, res) => res.send('🚀 Servidor JARide con PostgreSQL funcionando'));
 
