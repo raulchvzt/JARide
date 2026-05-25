@@ -1,5 +1,9 @@
 require('dotenv').config();
 const cloudinary = require('cloudinary').v2;
+//jwt 
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = process.env.JWT_SECRET || 'jaride_jwt_super_secreto_cambiar_en_prod';
+
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -20,7 +24,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const PORT    = process.env.PORT    || 5000;
+const PORT = process.env.PORT || 5000;
 const API_URL = process.env.API_URL || 'http://localhost:5000';
 const GOOGLE_ID = process.env.GOOGLE_CLIENT_ID || '1032892362121-71ep1vasopum4jiqi0lm2k5o0ngftpcr.apps.googleusercontent.com';
 
@@ -33,6 +37,31 @@ const pool = new Pool({
 });
 
 const codigosTemp = new Map();
+
+//jwt
+function firmarToken(res, payload) {
+  const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '8h' });
+  res.cookie('jaride_token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'Strict',
+    maxAge: 8 * 60 * 60 * 1000,
+  });
+  return token;
+}
+
+function verificarToken(req, res, next) {
+  const token = req.cookies?.jaride_token || req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ success: false, message: 'No autenticado' });
+  try {
+    req.usuario = jwt.verify(token, JWT_SECRET);
+    next();
+  } catch {
+    res.clearCookie('jaride_token');
+    return res.status(401).json({ success: false, message: 'Token inválido o expirado' });
+  }
+}
+
 
 function generarCodigo() {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -145,15 +174,15 @@ async function initDB() {
 }
 
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => { const dir='./uploads/'; if(!fs.existsSync(dir)) fs.mkdirSync(dir); cb(null,dir); },
-  filename: (req, file, cb) => cb(null, Date.now()+'-'+file.originalname)
+  destination: (req, file, cb) => { const dir = './uploads/'; if (!fs.existsSync(dir)) fs.mkdirSync(dir); cb(null, dir); },
+  filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
 });
 const upload = multer({ storage });
 
 async function autoConFotos(auto) {
   const fotos = await pool.query('SELECT url FROM fotos_autos WHERE auto_id = $1', [auto.id]);
   return {
-    ...auto,  
+    ...auto,
     verificado: auto.verificado === 1 || auto.verificado === true,
     photos: fotos.rows.map(f => f.url)
   };
@@ -179,10 +208,12 @@ app.post('/api/login', async (req, res) => {
   if (!ok) return res.status(401).json({ success: false, message: 'Correo o contraseña incorrectos' });
 
   if (user.dos_pasos === 1) {
-    try { await enviarCodigo(email, user.nombre); } catch (_) {}
+    try { await enviarCodigo(email, user.nombre); } catch (_) { }
     return res.json({ success: true, requiere2FA: true });
   }
-  res.json({ success: true, nombre: user.nombre, foto: user.fotoperfil, rol: user.rol });
+  //jwt
+  const token = firmarToken(res, { id: user.id, email: user.email, rol: user.rol, nombre: user.nombre });
+  res.json({ success: true, nombre: user.nombre, foto: user.fotoperfil, rol: user.rol, token });
 });
 
 // LOGIN GOOGLE
@@ -200,7 +231,10 @@ app.post('/api/login/google', async (req, res) => {
     } else if (!user.googleid) {
       await pool.query('UPDATE usuarios SET googleId = $1, fotoPerfil = $2 WHERE id = $3', [googleId, picture, user.id]);
     }
-    res.json({ success: true, nombre: user.nombre, foto: user.fotoperfil || picture, rol: user.rol });
+    //jwt
+    const token = firmarToken(res, { id: user.id, email: user.email, rol: user.rol, nombre: user.nombre });
+    res.json({ success: true, nombre: user.nombre, foto: user.fotoperfil || picture, rol: user.rol, token });
+    
   } catch (err) {
     console.error('Google login error:', err);
     res.status(401).json({ success: false, message: 'Token de Google inválido' });
@@ -213,7 +247,7 @@ app.post('/api/registro', async (req, res) => {
   const { rows } = await pool.query('SELECT id FROM usuarios WHERE email = $1', [email]);
   if (rows[0]) return res.json({ success: false, message: 'El usuario ya existe' });
   const hash = await bcrypt.hash(password, 10);
-  await pool.query(`INSERT INTO usuarios (nombre, email, password, rol, telefono, direccion, fotoPerfil) VALUES ($1,$2,$3,$4,$5,$6,$7)`, [nombre, email, hash, rol||'comprador', telefono, direccion, fotoPerfil]);
+  await pool.query(`INSERT INTO usuarios (nombre, email, password, rol, telefono, direccion, fotoPerfil) VALUES ($1,$2,$3,$4,$5,$6,$7)`, [nombre, email, hash, rol || 'comprador', telefono, direccion, fotoPerfil]);
   res.json({ success: true });
 });
 
@@ -264,10 +298,10 @@ app.get('/api/autos', async (req, res) => {
 });
 
 app.post('/api/autos', async (req, res) => {
-  const { marca,modelo,anio,precio,km,condicion,transmision,combustible,descripcion,categoria,vendedor,vendedor_email,photos,estado,verificado } = req.body;
+  const { marca, modelo, anio, precio, km, condicion, transmision, combustible, descripcion, categoria, vendedor, vendedor_email, photos, estado, verificado } = req.body;
   const { rows } = await pool.query(
     `INSERT INTO autos (marca,modelo,anio,precio,km,condicion,transmision,combustible,descripcion,categoria,vendedor,vendedor_email,estado,verificado) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING id`,
-    [marca,modelo,anio,precio,km,condicion,transmision,combustible,descripcion,categoria,vendedor,vendedor_email,estado||'pendiente',verificado?1:0]
+    [marca, modelo, anio, precio, km, condicion, transmision, combustible, descripcion, categoria, vendedor, vendedor_email, estado || 'pendiente', verificado ? 1 : 0]
   );
   const autoId = rows[0].id;
   if (Array.isArray(photos)) {
@@ -282,12 +316,12 @@ app.get('/api/autos/verificados', async (req, res) => {
 });
 
 app.get('/api/autos/:id', async (req, res) => {
-const { rows } = await pool.query(`
+  const { rows } = await pool.query(`
   SELECT a.*, u.fotoperfil as vendedor_foto
   FROM autos a
   LEFT JOIN usuarios u ON u.email = a.vendedor_email
   WHERE a.id = $1
-`, [req.params.id]);  const auto = rows[0];
+`, [req.params.id]); const auto = rows[0];
   if (!auto) return res.status(404).json({ success: false, message: 'Auto no encontrado' });
   const { rows: vRows } = await pool.query('SELECT direccion FROM usuarios WHERE email = $1', [auto.vendedor_email]);
   res.json({ success: true, ...await autoConFotos(auto), ubicacion_vendedor: vRows[0]?.direccion || null });
@@ -308,11 +342,11 @@ app.delete('/api/admin/usuarios/:id', async (req, res) => {
 
 // ADMIN VEHICULOS
 app.get('/api/admin/vehiculos', async (req, res) => {
-const { rows } = await pool.query(`
+  const { rows } = await pool.query(`
   SELECT a.*, u.fotoperfil as vendedor_foto
   FROM autos a
   LEFT JOIN usuarios u ON u.email = a.vendedor_email
-`);  res.json(await Promise.all(rows.map(autoConFotos)));
+`); res.json(await Promise.all(rows.map(autoConFotos)));
 });
 app.delete('/api/admin/vehiculos/:id', async (req, res) => {
   await pool.query('DELETE FROM autos WHERE id=$1', [req.params.id]);
@@ -343,25 +377,25 @@ app.patch('/api/admin/password', async (req, res) => {
 // EXPORTAR
 app.get('/api/admin/exportar/usuarios', async (req, res) => {
   const { rows } = await pool.query('SELECT id,nombre,email,rol,telefono FROM usuarios');
-  const csv = ['ID,Nombre,Email,Rol,Telefono', ...rows.map(u=>`${u.id},${u.nombre},${u.email},${u.rol},${u.telefono||''}`)].join('\n');
-  res.setHeader('Content-Type','text/csv'); res.setHeader('Content-Disposition','attachment; filename=usuarios.csv'); res.send(csv);
+  const csv = ['ID,Nombre,Email,Rol,Telefono', ...rows.map(u => `${u.id},${u.nombre},${u.email},${u.rol},${u.telefono || ''}`)].join('\n');
+  res.setHeader('Content-Type', 'text/csv'); res.setHeader('Content-Disposition', 'attachment; filename=usuarios.csv'); res.send(csv);
 });
 app.get('/api/admin/exportar/autos', async (req, res) => {
   const { rows } = await pool.query('SELECT id,marca,modelo,anio,precio,km,estado,vendedor FROM autos');
-  const csv = ['ID,Marca,Modelo,Anio,Precio,KM,Estado,Vendedor', ...rows.map(a=>`${a.id},${a.marca},${a.modelo},${a.anio},${a.precio},${a.km},${a.estado},${a.vendedor}`)].join('\n');
-  res.setHeader('Content-Type','text/csv'); res.setHeader('Content-Disposition','attachment; filename=autos.csv'); res.send(csv);
+  const csv = ['ID,Marca,Modelo,Anio,Precio,KM,Estado,Vendedor', ...rows.map(a => `${a.id},${a.marca},${a.modelo},${a.anio},${a.precio},${a.km},${a.estado},${a.vendedor}`)].join('\n');
+  res.setHeader('Content-Type', 'text/csv'); res.setHeader('Content-Disposition', 'attachment; filename=autos.csv'); res.send(csv);
 });
 
 // STATS
 app.get('/api/admin/stats', async (req, res) => {
   const q = async (sql) => (await pool.query(sql)).rows[0].t;
   res.json({
-    totalAutos:      await q("SELECT COUNT(*) as t FROM autos"),
-    autosAprobados:  await q("SELECT COUNT(*) as t FROM autos WHERE estado='aprobado'"),
+    totalAutos: await q("SELECT COUNT(*) as t FROM autos"),
+    autosAprobados: await q("SELECT COUNT(*) as t FROM autos WHERE estado='aprobado'"),
     autosPendientes: await q("SELECT COUNT(*) as t FROM autos WHERE estado='pendiente'"),
-    totalUsuarios:   await q("SELECT COUNT(*) as t FROM usuarios"),
-    compradores:     await q("SELECT COUNT(*) as t FROM usuarios WHERE rol='comprador'"),
-    vendedores:      await q("SELECT COUNT(*) as t FROM usuarios WHERE rol='vendedor'"),
+    totalUsuarios: await q("SELECT COUNT(*) as t FROM usuarios"),
+    compradores: await q("SELECT COUNT(*) as t FROM usuarios WHERE rol='comprador'"),
+    vendedores: await q("SELECT COUNT(*) as t FROM usuarios WHERE rol='vendedor'"),
   });
 });
 
@@ -422,7 +456,7 @@ app.get('/api/admin/graficas/usuarios-mes', async (req, res) => {
 app.post('/api/reportes', async (req, res) => {
   const { usuario_email, titulo, descripcion, categoria } = req.body;
   if (!usuario_email || !titulo || !descripcion) return res.status(400).json({ success: false, message: 'Faltan campos' });
-  await pool.query(`INSERT INTO reportes (usuario_email, titulo, descripcion, categoria) VALUES ($1,$2,$3,$4)`, [usuario_email, titulo, descripcion, categoria||'general']);
+  await pool.query(`INSERT INTO reportes (usuario_email, titulo, descripcion, categoria) VALUES ($1,$2,$3,$4)`, [usuario_email, titulo, descripcion, categoria || 'general']);
   res.json({ success: true });
 });
 app.get('/api/admin/reportes', async (req, res) => {
@@ -444,10 +478,10 @@ app.delete('/api/admin/reportes/:id', async (req, res) => {
 app.get('/api/admin/reportes/stats', async (req, res) => {
   const q = async (sql) => (await pool.query(sql)).rows[0].t;
   res.json({
-    total:      await q("SELECT COUNT(*) as t FROM reportes"),
+    total: await q("SELECT COUNT(*) as t FROM reportes"),
     pendientes: await q("SELECT COUNT(*) as t FROM reportes WHERE estado = 'pendiente'"),
-    urgentes:   await q("SELECT COUNT(*) as t FROM reportes WHERE estado = 'urgente'"),
-    resueltos:  await q("SELECT COUNT(*) as t FROM reportes WHERE estado = 'resuelto'"),
+    urgentes: await q("SELECT COUNT(*) as t FROM reportes WHERE estado = 'urgente'"),
+    resueltos: await q("SELECT COUNT(*) as t FROM reportes WHERE estado = 'resuelto'"),
   });
 });
 
