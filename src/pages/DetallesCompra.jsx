@@ -350,7 +350,10 @@ function DetallesCompra() {
               <h2 style={{fontSize:18,fontWeight:700,marginBottom:16,letterSpacing:'-0.01em'}}>También te puede interesar</h2>
               <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:16}}>
                 {similares.map(s=>(
-                  <div key={s.id} className="sim-card" onClick={()=>navigate(`/comprar/${s.id}`)}
+                  <div key={s.id} className="sim-card" onClick={() => {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                navigate(`/auto/${s.id}`);
+                    }}
                     style={{background:'#111',border:'1px solid #1f1f1f',borderRadius:14,overflow:'hidden',cursor:'pointer'}}>
                     <div style={{height:140,overflow:'hidden'}}>
                       <img src={s.photos?.[0]||'https://via.placeholder.com/400x140?text=Sin+Foto'} alt={`${s.marca} ${s.modelo}`}
