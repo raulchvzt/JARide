@@ -2,6 +2,11 @@ import React, { useState, useEffect, useCallback, memo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import AnimacionPagina from '../components/AnimacionPagina';
+import { lazy, Suspense } from 'react'
+
+const Car3DViewer = lazy(() => import('../components/Car3DViewer'));
+
+
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -204,6 +209,7 @@ function DetallesCompra() {
             </div>
           </div>
 
+
           {/* Galería */}
           {galeria.length>1 && (
             <div style={{display:'grid',gridTemplateColumns:`repeat(${Math.min(galeria.length,5)},1fr)`,gap:10,marginBottom:44}}>
@@ -217,6 +223,19 @@ function DetallesCompra() {
               ))}
             </div>
           )}
+
+                {id === '6' && (
+               <Car3DViewer modelUrl="/models/porsche-gt3/scene.gltf" />
+                )}
+
+                 {id === '8' && (
+               <Car3DViewer modelUrl="/models/ford-raptor/scene.gltf" />
+                )}
+
+                 {id === '5' && (
+               <Car3DViewer modelUrl="/models/lamborghini-svj/scene.gltf" />
+                )}
+
 
           {/* Ubicación */}
           {auto.ubicacion_vendedor && (
