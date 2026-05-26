@@ -10,10 +10,6 @@ function LoginContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-  const [toastOk, setToastOk] = useState(true);
-
   const [pantalla2FA, setPantalla2FA] = useState(false);
   const [emailPendiente, setEmailPendiente] = useState('');
   const [codigo2FA, setCodigo2FA] = useState('');
@@ -27,11 +23,26 @@ function LoginContent() {
   const [errorRecuperar, setErrorRecuperar] = useState('');
   const [loadingRecuperar, setLoadingRecuperar] = useState(false);
 
-  const mostrarToast = (msg, ok = true) => {
+  // Modal de éxito
+  const [modalExito, setModalExito] = useState(false);
+  const [nombreBienvenida, setNombreBienvenida] = useState('');
+  const [esGoogle, setEsGoogle] = useState(false);
+
+  // Toast para errores
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+
+  const mostrarError = (msg) => {
     setToastMessage(msg);
-    setToastOk(ok);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 4000);
+  };
+
+  const mostrarExito = (nombre, google = false) => {
+    setNombreBienvenida(nombre);
+    setEsGoogle(google);
+    setModalExito(true);
+    setTimeout(() => { window.location.href = '/'; }, 3500);
   };
 
   const guardarSesion = (data, emailUsado = '') => {
@@ -58,13 +69,12 @@ function LoginContent() {
       }
       if (data.success) {
         guardarSesion(data, email);
-        mostrarToast('¡Sesión iniciada con éxito! 🎉', true);
-        setTimeout(() => window.location.href = '/', 2000);
+        mostrarExito(data.nombre, false);
       } else {
-        mostrarToast('Error: ' + data.message, false);
+        mostrarError(data.message || 'Correo o contraseña incorrectos');
       }
     } catch {
-      mostrarToast('No se pudo conectar con el servidor.', false);
+      mostrarError('No se pudo conectar con el servidor.');
     }
   };
 
@@ -78,13 +88,12 @@ function LoginContent() {
       const data = await res.json();
       if (data.success) {
         guardarSesion(data);
-        mostrarToast('¡Sesión iniciada con Google! 🎉', true);
-        setTimeout(() => window.location.href = '/', 2000);
+        mostrarExito(data.nombre, true);
       } else {
-        mostrarToast('Error con Google: ' + data.message, false);
+        mostrarError('Error con Google: ' + data.message);
       }
     } catch {
-      mostrarToast('Error al conectar con Google.', false);
+      mostrarError('Error al conectar con Google.');
     }
   };
 
@@ -101,8 +110,7 @@ function LoginContent() {
         const res2 = await fetch(`${import.meta.env.VITE_API_URL}/api/usuario/perfil?email=${emailPendiente}`);
         const user = await res2.json();
         guardarSesion({ nombre: user.nombre, foto: user.fotoPerfil, rol: user.rol }, emailPendiente);
-        mostrarToast('¡Sesión iniciada con éxito! 🎉', true);
-        setTimeout(() => window.location.href = '/', 2000);
+        mostrarExito(user.nombre, false);
       } else {
         setError2FA(data.message || 'Código incorrecto');
       }
@@ -143,16 +151,175 @@ function LoginContent() {
         setEmailRecuperar('');
         setCodigoRecuperar('');
         setNuevaPass('');
-        mostrarToast('¡Contraseña actualizada con éxito! 🎉', true);
+        mostrarError('✓ Contraseña actualizada. Inicia sesión con tu nueva contraseña.');
       } else setErrorRecuperar(data.message);
     } catch { setErrorRecuperar('Error de conexión'); }
     setLoadingRecuperar(false);
   };
 
-  // PANTALLA 2FA
+  // ── MODAL ÉXITO (compartido) ──
+  const ModalExito = () => (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 9999,
+      background: 'rgba(0,0,0,0.88)',
+      backdropFilter: 'blur(14px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      animation: 'fadeIn 0.3s ease',
+    }}>
+      <style>{`
+        @keyframes fadeIn      { from{opacity:0} to{opacity:1} }
+        @keyframes slideUp     { from{opacity:0;transform:translateY(28px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes pulse       { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+        @keyframes shimmer     { 0%{background-position:-200% center} 100%{background-position:200% center} }
+        @keyframes progressBar { from{width:0%} to{width:100%} }
+        @keyframes floatDot    { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+      `}</style>
+
+      <div style={{
+        background: 'linear-gradient(160deg, #111 0%, #0d0d0d 100%)',
+        border: '1px solid #2a2a2a',
+        borderRadius: '32px',
+        padding: '56px 48px 44px',
+        maxWidth: '440px',
+        width: '92%',
+        textAlign: 'center',
+        fontFamily: 'sans-serif',
+        animation: 'slideUp 0.45s cubic-bezier(0.16,1,0.3,1)',
+        position: 'relative',
+        overflow: 'hidden',
+        boxShadow: '0 40px 80px rgba(0,0,0,0.7), 0 0 0 1px #ffffff08',
+      }}>
+
+        {/* Glow superior */}
+        <div style={{
+          position: 'absolute', top: '-80px', left: '50%',
+          transform: 'translateX(-50%)',
+          width: '260px', height: '260px',
+          background: 'radial-gradient(circle, #f1c98a25 0%, transparent 65%)',
+          pointerEvents: 'none',
+        }} />
+
+        {/* Partículas */}
+        {[
+          { top: '18%', left: '12%',  delay: '0s',   size: 6 },
+          { top: '14%', right: '10%', delay: '0.3s', size: 4 },
+          { top: '70%', left: '8%',   delay: '0.6s', size: 5 },
+          { top: '75%', right: '6%',  delay: '0.2s', size: 3 },
+        ].map((p, i) => (
+          <div key={i} style={{
+            position: 'absolute',
+            top: p.top, left: p.left, right: p.right,
+            width: p.size, height: p.size,
+            borderRadius: '50%',
+            background: '#f1c98a',
+            opacity: 0.4,
+            animation: `floatDot 2.4s ease-in-out ${p.delay} infinite`,
+          }} />
+        ))}
+
+        {/* Icono */}
+        <div style={{
+          width: '88px', height: '88px',
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg, #f1c98a 0%, #c9971a 100%)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          margin: '0 auto 28px',
+          fontSize: '38px',
+          boxShadow: '0 0 0 12px #f1c98a12, 0 0 40px #f1c98a40',
+          animation: 'pulse 2s ease-in-out infinite',
+          position: 'relative', zIndex: 1,
+        }}>
+          {esGoogle ? '🚀' : '🏁'}
+        </div>
+
+        {/* Título shimmer */}
+        <h2 style={{
+          fontSize: '28px',
+          fontWeight: 800,
+          margin: '0 0 10px',
+          letterSpacing: '-0.6px',
+          background: 'linear-gradient(90deg, #f1c98a 0%, #fff 40%, #f1c98a 80%)',
+          backgroundSize: '200% auto',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          animation: 'shimmer 2.8s linear infinite',
+          position: 'relative', zIndex: 1,
+        }}>
+          ¡Bienvenido, {nombreBienvenida}!
+        </h2>
+
+        <p style={{
+          fontSize: '14px',
+          color: '#6b7280',
+          margin: '0 0 10px',
+          lineHeight: 1.75,
+          position: 'relative', zIndex: 1,
+        }}>
+          {esGoogle
+            ? <>Sesión iniciada con <span style={{ color: '#f1c98a', fontWeight: 700 }}>Google</span> correctamente.<br />Listo para explorar JARide.</>
+            : <>Sesión iniciada en <span style={{ color: '#f1c98a', fontWeight: 700 }}>JARide</span> correctamente.<br />Bienvenido de vuelta a Colima.</>
+          }
+        </p>
+
+        {/* Separador */}
+        <div style={{
+          height: '1px',
+          background: 'linear-gradient(90deg, transparent, #2a2a2a, transparent)',
+          margin: '28px 0 24px',
+        }} />
+
+        {/* Chips */}
+        <div style={{
+          display: 'flex', gap: '8px',
+          justifyContent: 'center', flexWrap: 'wrap',
+          marginBottom: '28px',
+          position: 'relative', zIndex: 1,
+        }}>
+          {['✓ Sesión activa', '✓ Acceso seguro', '✓ JARide Colima'].map((tag, i) => (
+            <span key={i} style={{
+              background: '#22c55e0d',
+              border: '1px solid #22c55e22',
+              color: '#4ade80',
+              fontSize: '11px',
+              fontWeight: 600,
+              padding: '5px 14px',
+              borderRadius: '30px',
+            }}>
+              {tag}
+            </span>
+          ))}
+        </div>
+
+        {/* Barra de progreso */}
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <div style={{
+            display: 'flex', justifyContent: 'space-between',
+            fontSize: '11px', color: '#4b5563',
+            marginBottom: '8px',
+            textTransform: 'uppercase', letterSpacing: '0.08em',
+          }}>
+            <span>Entrando al inicio</span>
+            <span>3s</span>
+          </div>
+          <div style={{ height: '3px', background: '#1c1c1c', borderRadius: '99px', overflow: 'hidden' }}>
+            <div style={{
+              height: '100%',
+              background: 'linear-gradient(90deg, #f1c98a, #e2a84b)',
+              borderRadius: '99px',
+              animation: 'progressBar 3.5s linear forwards',
+              width: '0%',
+            }} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ── PANTALLA 2FA ──
   if (pantalla2FA) {
     return (
       <div className="h-screen w-full flex items-center justify-center bg-[#0a0a0a]">
+        {modalExito && <ModalExito />}
         <div style={{ background: '#111', border: '1px solid #2a2a2a', borderRadius: '20px', padding: '40px', width: '100%', maxWidth: '420px', fontFamily: 'sans-serif', color: '#fff' }}>
           <h1 style={{ color: '#f1c98a', fontSize: '24px', fontWeight: 800, marginBottom: '8px' }}>JARide</h1>
           <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>Verificación en dos pasos</h2>
@@ -180,9 +347,11 @@ function LoginContent() {
     );
   }
 
-  // PANTALLA LOGIN NORMAL
+  // ── PANTALLA LOGIN NORMAL ──
   return (
     <div className="h-screen w-full grid grid-cols-1 md:grid-cols-2 bg-black text-white font-sans overflow-hidden">
+
+      {modalExito && <ModalExito />}
 
       {/* IZQUIERDA: VIDEO */}
       <div className="relative overflow-hidden hidden md:flex flex-col justify-end p-12 h-full">
@@ -216,7 +385,7 @@ function LoginContent() {
               <div className="absolute inset-0 opacity-0 overflow-hidden rounded-xl">
                 <GoogleLogin
                   onSuccess={manejarGoogleLogin}
-                  onError={() => mostrarToast('Error al iniciar sesión con Google', false)}
+                  onError={() => mostrarError('Error al iniciar sesión con Google')}
                   useOneTap={false}
                   width="300"
                 />
@@ -295,7 +464,6 @@ function LoginContent() {
                 ? 'Ingresa tu correo y te enviaremos un código.'
                 : `Ingresa el código enviado a ${emailRecuperar} y tu nueva contraseña.`}
             </p>
-
             {pasoRecuperar === 1 ? (
               <>
                 <input type="email" placeholder="tu@correo.com" value={emailRecuperar}
@@ -322,7 +490,6 @@ function LoginContent() {
                 </button>
               </>
             )}
-
             <button onClick={() => setModalRecuperar(false)}
               className="w-full p-3 bg-transparent border border-gray-800 text-gray-400 rounded-xl text-sm">
               Cancelar
@@ -331,13 +498,13 @@ function LoginContent() {
         </div>
       )}
 
-      {/* TOAST */}
+      {/* TOAST ERRORES */}
       {showToast && (
-        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2 duration-300">
-          <div className="bg-[#0a0a0a] border border-[#f1c98a]/20 rounded-xl p-4 shadow-2xl max-w-sm">
+        <div className="fixed top-4 right-4 z-50">
+          <div className="bg-[#0a0a0a] border border-[#f1c98a]/20 rounded-xl p-4 shadow-2xl max-w-sm" style={{ animation: 'fadeIn 0.3s ease' }}>
             <div className="flex items-center gap-3">
-              <div className="bg-[#f1c98a]/10 p-2 rounded-full">
-                <span className="text-[#f1c98a] text-lg">{toastOk ? '✅' : '❌'}</span>
+              <div className="bg-[#ef4444]/10 p-2 rounded-full">
+                <span className="text-lg">❌</span>
               </div>
               <p className="text-white text-sm font-medium flex-1">{toastMessage}</p>
               <button onClick={() => setShowToast(false)} className="text-gray-400 hover:text-white">✕</button>

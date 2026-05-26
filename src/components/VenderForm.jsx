@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 
 const InputGroup = ({ label, name, value, onChange, placeholder, options }) => (
   <div className="flex flex-col gap-2">
@@ -158,7 +158,7 @@ const KMInput = ({ value, onChange }) => {
   );
 };
 
-export default function VenderForm({ formData, setFormData }) {
+const VenderForm = ({ formData, setFormData }) => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -276,3 +276,5 @@ export default function VenderForm({ formData, setFormData }) {
     </div>
   );
 }
+
+export default memo(VenderForm);

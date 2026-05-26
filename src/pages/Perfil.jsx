@@ -93,6 +93,120 @@ function MisPublicaciones({ email, navigate }) {
   );
 }
 
+// ------------------------------------------------------------------
+// COMPONENTE: Mis Guardados
+// ------------------------------------------------------------------
+function MisGuardados({ email, navigate }) {
+  const [favoritos, setFavoritos] = React.useState([]);
+  const [cargando, setCargando] = React.useState(true);
+
+  React.useEffect(() => {
+    if (!email) return;
+    fetch(`${API}/api/favoritos?email=${email}`)
+      .then(r => r.json())
+      .then(async (ids) => {
+        if (!ids || ids.length === 0) { setFavoritos([]); return; }
+        const autos = await fetch(`${API}/api/autos`).then(r => r.json());
+        const guardados = autos.filter(a => ids.includes(a.id));
+        setFavoritos(guardados);
+      })
+      .catch(() => {})
+      .finally(() => setCargando(false));
+  }, [email]);
+
+  const handleEliminar = async (autoId, e) => {
+    e.stopPropagation();
+    await fetch(`${API}/api/favoritos`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, auto_id: autoId })
+    });
+    setFavoritos(prev => prev.filter(a => a.id !== autoId));
+  };
+
+  const formatPrecio = (p) => 'USD$ ' + parseInt(p).toLocaleString();
+  const formatKm    = (k) => parseInt(k).toLocaleString() + ' km';
+
+  return (
+    <div style={{ background: '#111', border: '1px solid #1f1f1f', borderRadius: '24px', padding: '32px', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
+        <div>
+          <h2 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 4px', letterSpacing: '-0.3px' }}>Mis guardados</h2>
+          <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>Vehículos que marcaste como favoritos</p>
+        </div>
+        <span style={{ background: '#f1c98a15', border: '1px solid #f1c98a30', color: '#f1c98a', fontSize: '12px', fontWeight: 700, padding: '5px 14px', borderRadius: '30px' }}>
+          ❤️ {favoritos.length}
+        </span>
+      </div>
+
+      {cargando ? (
+        <p style={{ fontSize: '13px', color: '#6b7280', textAlign: 'center', padding: '20px 0' }}>Cargando favoritos...</p>
+      ) : favoritos.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '40px 0', border: '2px dashed #222', borderRadius: '16px' }}>
+          <div style={{ fontSize: '32px', marginBottom: '12px' }}>🤍</div>
+          <p style={{ fontSize: '13px', color: '#6b7280', margin: '0 0 16px' }}>Aún no tienes vehículos guardados</p>
+          <button onClick={() => navigate('/comprar')}
+            style={{ background: 'none', border: '1px solid #2a2a2a', borderRadius: '10px', padding: '10px 24px', color: '#9ca3af', fontSize: '12px', cursor: 'pointer', fontFamily: 'sans-serif' }}>
+            Explorar catálogo
+          </button>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {favoritos.map(a => (
+            <div key={a.id} onClick={() => navigate(`/auto/${a.id}`)}                   
+             style={{ display: 'flex', alignItems: 'center', gap: '20px', padding: '16px', background: '#161616', border: '1px solid #222', borderRadius: '16px', cursor: 'pointer', transition: 'all 0.2s' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.background = '#1a1a1a'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#222'; e.currentTarget.style.background = '#161616'; }}
+            >
+              {/* Imagen */}
+              <div style={{ width: '80px', height: '56px', borderRadius: '10px', overflow: 'hidden', flexShrink: 0, background: '#222' }}>
+                {a.photos?.[0]
+                  ? <img src={a.photos[0]} alt={a.modelo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>🚗</div>
+                }
+              </div>
+
+              {/* Info */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: '14px', fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {a.marca} {a.modelo}
+                </div>
+                <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
+                  {a.anio} · {formatKm(a.km)}
+                </div>
+              </div>
+
+              {/* Precio */}
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: '#f1c98a' }}>{formatPrecio(a.precio)}</div>
+                {a.verificado && (
+                  <div style={{ fontSize: '10px', color: '#22c55e', marginTop: '4px', fontWeight: 600 }}>✓ Verificado</div>
+                )}
+              </div>
+
+              {/* Quitar favorito */}
+              <button onClick={(e) => handleEliminar(a.id, e)}
+                title="Quitar de guardados"
+                style={{ flexShrink: 0, background: 'none', border: '1px solid #2a2a2a', borderRadius: '8px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '14px', color: '#ef4444', transition: 'all 0.2s' }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#ef444415'; e.currentTarget.style.borderColor = '#ef444430'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.borderColor = '#2a2a2a'; }}>
+                ✕
+              </button>
+
+              <span style={{ color: '#4b5563', fontSize: '18px', flexShrink: 0 }}>›</span>
+            </div>
+          ))}
+
+          <button onClick={() => navigate('/comprar')}
+            style={{ background: 'none', border: 'none', color: '#f1c98a', fontSize: '13px', fontWeight: 600, cursor: 'pointer', padding: '8px 0', textAlign: 'left', fontFamily: 'sans-serif' }}>
+            Explorar más autos →
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const ESTADO_COLOR = {
   pendiente: { color: '#f59e0b', bg: '#f59e0b10', label: 'Pendiente' },
   urgente:   { color: '#ef4444', bg: '#ef444410', label: 'Urgente' },
@@ -187,23 +301,25 @@ const handleFoto = async (e) => {
   }
 };
 
-  const handleGuardar = async () => {
-    try {
-      const res = await fetch(`${API}/api/usuario/perfil`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, nombre, telefono, direccion: ubicacion, fotoPerfil: foto })
-      });
-      const data = await res.json();
-      if (data.success) {
-        sessionStorage.setItem('usuarioNombre', nombre);
-        sessionStorage.setItem('usuarioFoto', foto || '');
-        setEditando(false);
-        setGuardado(true);
-        setTimeout(() => setGuardado(false), 3000);
-      }
-    } catch { setError('Error al guardar los cambios'); }
-  };
+const handleGuardar = async () => {
+  try {
+    const res = await fetch(`${API}/api/usuario/perfil`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, nombre, telefono, direccion: ubicacion, fotoPerfil: foto })
+    });
+    const data = await res.json();
+    if (data.success) {
+      sessionStorage.setItem('usuarioNombre', nombre);
+      sessionStorage.setItem('usuarioFoto', foto || '');
+      sessionStorage.setItem('usuarioEmail', email);       // ← agrega
+      sessionStorage.setItem('estaAutenticado', 'true');   // ← agrega
+      setEditando(false);
+      setGuardado(true);
+      setTimeout(() => setGuardado(false), 3000);
+    }
+  } catch { setError('Error al guardar los cambios'); }
+};
 
   const handleCambiarPassword = async () => {
     setPassError('');
@@ -414,8 +530,13 @@ const handleFoto = async (e) => {
             )}
           </div>
 
+          
+
+             <MisGuardados email={email} navigate={navigate} />
+
           {/* Bloque 3: Módulo de publicaciones condicional*/}
           {(rol === 'vendedor' || rol === 'admin') && (
+         
             <MisPublicaciones email={email} navigate={navigate} />
           )}
 
