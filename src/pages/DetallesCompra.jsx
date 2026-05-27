@@ -236,6 +236,10 @@ function DetallesCompra() {
                <Car3DViewer modelUrl="/models/lamborghini-svj/scene.gltf" />
                 )}
 
+                  {id === '15' && (
+                  <Car3DViewer modelUrl="/models/porsche911/scene.gltf" colorInicial="#f5c400" />                
+                  )}
+
 
           {/* Ubicación */}
           {auto.ubicacion_vendedor && (

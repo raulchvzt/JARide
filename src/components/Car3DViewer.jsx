@@ -13,9 +13,34 @@ const COLORES = [
   { label: '🟢 Verde',    hex: '#1a7a2a' },
 ]
 
+// Materiales a excluir (nunca son carrocería)
+const EXCLUIDOS = [
+  'glass', 'window', 'windshield', 'windscreen',
+  'tire', 'tyre', 'rubber', 'wheel',
+  'light', 'lamp', 'headlight', 'taillight',
+  'chrome', 'mirror', 'exhaust', 'brake',
+  'interior', 'seat', 'dashboard', 'steering',
+  'carpet', 'fabric', 'leather',
+  'badge', 'logo', 'emblem', 'plate',
+  'caliper', 'disc', 'rotor',
+  'carbon', 'grille',
+]
+
+// Materiales que siempre van en negro fijo (solo Porsche 911)
+const NEGRO_911 = [
+  'wheel1a_3d',
+  'rewardrecycled_2018badgea',
+  'rewardrecycled_2018base_material',
+]
+
+function esExcluido(name) {
+  return EXCLUIDOS.some(ex => name.includes(ex))
+}
+
 function CarModel({ url, color }) {
   const { scene } = useGLTF(url)
 
+  // Escala y centrado
   useEffect(() => {
     const box = new THREE.Box3().setFromObject(scene)
     const size = box.getSize(new THREE.Vector3())
@@ -26,13 +51,26 @@ function CarModel({ url, color }) {
     scene.position.y -= center.y
   }, [scene])
 
+  // Negro fijo → solo Porsche 911
+  useEffect(() => {
+    if (!url.includes('porsche911')) return
+    scene.traverse((child) => {
+      if (child.isMesh && child.material) {
+        const name = (child.material.name || child.name || '').toLowerCase()
+        if (NEGRO_911.some(n => name.includes(n))) {
+          child.material = child.material.clone()
+          child.material.color.set('#111111')
+        }
+      }
+    })
+  }, [scene, url])
+
+  // Carrocería → color seleccionable (aplica a todos los modelos)
   useEffect(() => {
     scene.traverse((child) => {
       if (child.isMesh && child.material) {
         const name = (child.material.name || child.name || '').toLowerCase()
-        const esCarroceria = name.includes('body') || name.includes('paint') ||
-                             name.includes('car')  || name.includes('exterior')
-        if (esCarroceria) {
+        if (!esExcluido(name)) {
           child.material = child.material.clone()
           child.material.color.set(color)
         }
@@ -43,13 +81,12 @@ function CarModel({ url, color }) {
   return <primitive object={scene} />
 }
 
-export default function Car3DViewer({ modelUrl }) {
-  const [colorActivo, setColorActivo] = useState('#ffffff')
+export default function Car3DViewer({ modelUrl, colorInicial }) {
+  const [colorActivo, setColorActivo] = useState(colorInicial || '#ffffff')
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 })
 
   return (
     <div ref={ref} style={{ marginBottom: 32 }}>
-
       {/* Visor */}
       <div style={{ width: '100%', height: '400px', borderRadius: '12px', overflow: 'hidden', background: '#111' }}>
         {inView ? (
@@ -89,7 +126,6 @@ export default function Car3DViewer({ modelUrl }) {
           </button>
         ))}
       </div>
-
     </div>
   )
 }
@@ -97,3 +133,4 @@ export default function Car3DViewer({ modelUrl }) {
 useGLTF.preload('/models/porsche-gt3/scene.gltf')
 useGLTF.preload('/models/ford-raptor/scene.gltf')
 useGLTF.preload('/models/lamborghini-svj/scene.gltf')
+useGLTF.preload('/models/porsche911/scene.gltf')
