@@ -4,6 +4,10 @@ const cloudinary = require('cloudinary').v2;
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'jaride_jwt_super_secreto_cambiar_en_prod';
 
+//cookies yeah
+const cookieParser = require('cookie-parser');
+
+
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -23,6 +27,43 @@ const { OAuth2Client } = require('google-auth-library');
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+//cookies
+app.use(cookieParser());
+const crypto = require('crypto');
+
+const ENCRYPTION_KEY = Buffer.from(process.env.ENCRYPTION_KEY || '12345678901234567890123456789012', 'utf8');
+
+function cifrar(texto) {
+  if (!texto) return texto;
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv('aes-256-gcm', ENCRYPTION_KEY, iv);
+  const cifrado = Buffer.concat([cipher.update(texto, 'utf8'), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return iv.toString('hex') + ':' + tag.toString('hex') + ':' + cifrado.toString('hex');
+}
+
+function descifrar(texto) {
+  if (!texto || !texto.includes(':')) return texto;
+  const [ivHex, tagHex, cifradoHex] = texto.split(':');
+  const decipher = crypto.createDecipheriv('aes-256-gcm', ENCRYPTION_KEY, Buffer.from(ivHex, 'hex'));
+  decipher.setAuthTag(Buffer.from(tagHex, 'hex'));
+  const descifrado = Buffer.concat([decipher.update(Buffer.from(cifradoHex, 'hex')), decipher.final()]);
+  return descifrado.toString('utf8');
+}
+
+app.get('/api/csrf-token', (_req, res) => {
+  const csrfToken = crypto.randomBytes(32).toString('hex');
+  res.cookie('jaride_csrf', csrfToken, {
+    httpOnly: false,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'Strict',
+    maxAge: 8 * 60 * 60 * 1000,
+  });
+  res.json({ csrfToken });
+});
+
+
 
 const PORT = process.env.PORT || 5000;
 const API_URL = process.env.API_URL || 'http://localhost:5000';
@@ -234,7 +275,7 @@ app.post('/api/login/google', async (req, res) => {
     //jwt
     const token = firmarToken(res, { id: user.id, email: user.email, rol: user.rol, nombre: user.nombre });
     res.json({ success: true, nombre: user.nombre, foto: user.fotoperfil || picture, rol: user.rol, token });
-    
+
   } catch (err) {
     console.error('Google login error:', err);
     res.status(401).json({ success: false, message: 'Token de Google inválido' });
@@ -247,7 +288,7 @@ app.post('/api/registro', async (req, res) => {
   const { rows } = await pool.query('SELECT id FROM usuarios WHERE email = $1', [email]);
   if (rows[0]) return res.json({ success: false, message: 'El usuario ya existe' });
   const hash = await bcrypt.hash(password, 10);
-  await pool.query(`INSERT INTO usuarios (nombre, email, password, rol, telefono, direccion, fotoPerfil) VALUES ($1,$2,$3,$4,$5,$6,$7)`, [nombre, email, hash, rol || 'comprador', telefono, direccion, fotoPerfil]);
+await pool.query(`INSERT INTO usuarios (nombre, email, password, rol, telefono, direccion, fotoPerfil) VALUES ($1,$2,$3,$4,$5,$6,$7)`, [nombre, email, hash, rol || 'comprador', cifrar(telefono), cifrar(direccion), fotoPerfil]);
   res.json({ success: true });
 });
 
@@ -332,7 +373,7 @@ app.get('/api/admin/usuarios', async (req, res) => {
   const { rows } = await pool.query(
     'SELECT id, nombre, email, rol, telefono, fotoperfil as "fotoPerfil" FROM usuarios'
   );
-  res.json(rows);
+res.json(rows.map(u => ({ ...u, telefono: descifrar(u.telefono) })));
 });
 
 app.delete('/api/admin/usuarios/:id', async (req, res) => {
@@ -521,11 +562,14 @@ app.get('/api/usuarios/lista', async (req, res) => {
 app.get('/api/usuario/perfil', async (req, res) => {
   const { rows } = await pool.query('SELECT id, nombre, email, rol, telefono, direccion, fotoPerfil FROM usuarios WHERE email = $1', [req.query.email]);
   if (!rows[0]) return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
-  res.json({ success: true, ...rows[0] });
+const usuario = rows[0];
+usuario.telefono = descifrar(usuario.telefono);
+usuario.direccion = descifrar(usuario.direccion);
+res.json({ success: true, ...usuario });
 });
 app.patch('/api/usuario/perfil', async (req, res) => {
   const { email, nombre, telefono, direccion, fotoPerfil } = req.body;
-  await pool.query('UPDATE usuarios SET nombre=$1, telefono=$2, direccion=$3, fotoPerfil=$4 WHERE email=$5', [nombre, telefono, direccion, fotoPerfil, email]);
+await pool.query('UPDATE usuarios SET nombre=$1, telefono=$2, direccion=$3, fotoPerfil=$4 WHERE email=$5', [nombre, cifrar(telefono), cifrar(direccion), fotoPerfil, email]);
   res.json({ success: true });
 });
 app.patch('/api/usuario/password', async (req, res) => {
