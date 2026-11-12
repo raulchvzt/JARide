@@ -1,0 +1,90 @@
+{
+  "vendedor": "Admin JARide",
+  "vendedor_email": "admin@jaride.com",
+  "autos": [
+    {
+      "fotos": "ford-raptor-r",
+      "marca": "Ford", "modelo": "F-150 Raptor R", "anio": "2025", "precio": "115000", "km": "3500",
+      "condicion": "Seminuevo", "transmision": "Automática", "combustible": "Gasolina", "categoria": "PickUps", "verificado": true,
+      "descripcion": "La pickup más extrema de Ford, con motor V8 supercargado de 720 hp y suspensión Fox Live Valve para todo terreno. Color blanco con detalles en gris, faros LED con firma naranja e interior con asientos Recaro."
+    },
+    {
+      "fotos": "tesla-cybertruck",
+      "marca": "Tesla", "modelo": "Cybertruck", "anio": "2024", "precio": "85000", "km": "6000",
+      "condicion": "Seminuevo", "transmision": "Automática", "combustible": "Eléctrico", "categoria": "Eléctricos", "verificado": false,
+      "descripcion": "Pickup 100% eléctrica con carrocería de acero inoxidable, tracción integral y pantalla central de 18.5 pulgadas. Diseño futurista, gran capacidad de carga y aceleración de deportivo."
+    },
+    {
+      "fotos": "cadillac-escalade",
+      "marca": "Cadillac", "modelo": "Escalade", "anio": "2025", "precio": "115000", "km": "2000",
+      "condicion": "Seminuevo", "transmision": "Automática", "combustible": "Gasolina", "categoria": "SUVs", "verificado": false,
+      "descripcion": "SUV de lujo de tamaño completo, color blanco, con la nueva pantalla curva de pilar a pilar, interior en piel color caramelo y tres filas de asientos. Ideal para familia con máximo confort."
+    },
+    {
+      "fotos": "bmw-m3",
+      "marca": "BMW", "modelo": "M3 Competition", "anio": "2024", "precio": "82000", "km": "8000",
+      "condicion": "Seminuevo", "transmision": "Automática", "combustible": "Gasolina", "categoria": "Sedanes", "verificado": false,
+      "descripcion": "Sedán deportivo de cuatro puertas con motor seis cilindros biturbo de 503 hp. Blanco con rines negros, frenos con cálipers azules y asientos deportivos M con detalles en amarillo y azul."
+    },
+    {
+      "fotos": "bmw-m4",
+      "marca": "BMW", "modelo": "M4 Competition", "anio": "2024", "precio": "85000", "km": "5000",
+      "condicion": "Seminuevo", "transmision": "Automática", "combustible": "Gasolina", "categoria": "Deportivos", "verificado": false,
+      "descripcion": "Coupé deportivo de 503 hp, color blanco con rines negros e interior en piel roja con negro. Volante M con botones de modo rojo y pantalla curva de última generación."
+    },
+    {
+      "fotos": "porsche-gt3rs-blanco",
+      "marca": "Porsche", "modelo": "911 GT3 RS Weissach", "anio": "2024", "precio": "340000", "km": "1200",
+      "condicion": "Seminuevo", "transmision": "Automática", "combustible": "Gasolina", "categoria": "Deportivos", "verificado": true,
+      "descripcion": "El 911 más radical de calle, con paquete Weissach, alerón activo y aerodinámica de competencia. Blanco con rines y detalles en rojo; motor bóxer atmosférico de 518 hp."
+    },
+    {
+      "fotos": "porsche-gt3rs-amarillo",
+      "marca": "Porsche", "modelo": "911 GT3 RS", "anio": "2019", "precio": "230000", "km": "9000",
+      "condicion": "Usado", "transmision": "Automática", "combustible": "Gasolina", "categoria": "Deportivos", "verificado": false,
+      "descripcion": "Clásico moderno de pista en amarillo con cofre de fibra de carbono, rines negros y frenos con cálipers amarillos. Motor bóxer de 4.0 litros y 520 hp; interior en Alcantara con costuras amarillas."
+    },
+    {
+      "fotos": "lamborghini-aventador-svj",
+      "marca": "Lamborghini", "modelo": "Aventador SVJ", "anio": "2020", "precio": "650000", "km": "4000",
+      "condicion": "Seminuevo", "transmision": "Automática", "combustible": "Gasolina", "categoria": "Deportivos", "verificado": true,
+      "descripcion": "V12 atmosférico de 770 hp con aerodinámica activa ALA. Blanco con decoración de carreras y rines bronce; una de las versiones más exclusivas del Aventador."
+    },
+    {
+      "fotos": "lamborghini-urus",
+      "marca": "Lamborghini", "modelo": "Urus", "anio": "2024", "precio": "260000", "km": "3000",
+      "condicion": "Seminuevo", "transmision": "Automática", "combustible": "Gasolina", "categoria": "SUVs", "verificado": true,
+      "descripcion": "El super SUV de Lamborghini en amarillo Giallo, con motor V8 biturbo de 657 hp. Combina el desempeño de un deportivo con el espacio y la practicidad de una SUV."
+    },
+    {
+      "fotos": "ram-trx",
+      "marca": "RAM", "modelo": "1500 TRX", "anio": "2023", "precio": "95000", "km": "12000",
+      "condicion": "Seminuevo", "transmision": "Automática", "combustible": "Gasolina", "categoria": "PickUps", "verificado": false,
+      "descripcion": "Pickup de alto desempeño en negro con motor V8 supercargado de 702 hp. Interior en piel negra con costuras rojas y pantalla vertical de 12 pulgadas."
+    },
+    {
+      "fotos": "jeep-gladiator",
+      "marca": "Jeep", "modelo": "Gladiator Mojave", "anio": "2024", "precio": "58000", "km": "10000",
+      "condicion": "Seminuevo", "transmision": "Automática", "combustible": "Gasolina", "categoria": "PickUps", "verificado": false,
+      "descripcion": "Pickup 4x4 preparada para desierto, color gris, con suspensión Fox, toldo desmontable y detalles en naranja. Perfecta para aventura y uso diario."
+    },
+    {
+      "fotos": "chevrolet-corvette-c8",
+      "marca": "Chevrolet", "modelo": "Corvette C8 Stingray", "anio": "2024", "precio": "78000", "km": "4500",
+      "condicion": "Seminuevo", "transmision": "Automática", "combustible": "Gasolina", "categoria": "Deportivos", "verificado": false,
+      "descripcion": "Deportivo de motor central en amarillo Accelerate, con V8 de 6.2 litros y 495 hp. Rines plata, techo desmontable y cabina enfocada en el conductor."
+    },
+    {
+      "fotos": "bugatti-divo",
+      "marca": "Bugatti", "modelo": "Divo", "anio": "2020", "precio": "5800000", "km": "1000",
+      "condicion": "Seminuevo", "transmision": "Automática", "combustible": "Gasolina", "categoria": "Deportivos", "verificado": false,
+      "descripcion": "Hiperdeportivo de producción ultra limitada, con motor W16 quad-turbo de 1,500 hp. Diseñado para curvas, con aerodinámica extrema y acabado bicolor."
+    },
+    {
+      "fotos": "ferrari-sf90",
+      "marca": "Ferrari", "modelo": "SF90 Spider", "anio": "2023", "precio": "560000", "km": "2000",
+      "condicion": "Seminuevo", "transmision": "Automática", "combustible": "Híbrido", "categoria": "Deportivos", "verificado": false,
+      "descripcion": "Superdeportivo híbrido enchufable de 986 hp con techo retráctil. Rojo Rosso Corsa, tracción integral y modo eléctrico para manejo silencioso en ciudad."
+    }
+  ]
+}
