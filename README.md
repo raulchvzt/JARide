@@ -302,7 +302,7 @@ El backend usa el plan gratuito de Render, así que puede tardar unos segundos e
 | Integrante | Rol |
 |---|---|
 | **Raúl Alejandro Chávez Torres** · [@raulchvzt](https://github.com/raulchvzt) | Desarrollo full stack: frontend, API REST, base de datos, autenticación y despliegue |
-| **Belinda Cárdenas** | Desarrollo frontend |
+| **Belinda Cárdenas** · [@usuario](https://github.com/belipop-123) | Desarrollo frontend |
 
 <br>
 
