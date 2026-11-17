@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import verificadosImg from '../assets/verificados.jpeg';
 
 export default function VerificadosComp() {
   const steps = [
@@ -19,7 +20,7 @@ export default function VerificadosComp() {
       id: "03",
       title: "Garantía Mecánica",
       desc: "Cada auto verificado cuenta con el respaldo técnico de nuestro equipo de expertos.",
-      img: "/src/assets/verificados.jpeg"
+      img: verificadosImg
     }
   ];
 
